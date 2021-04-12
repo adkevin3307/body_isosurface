@@ -45,15 +45,20 @@ private:
 public:
     Volume();
     Volume(std::string inf_file, std::string raw_file);
+    Volume(Volume const& rhs);
+    Volume(Volume&& rhs);
     ~Volume();
+
+    Volume& operator=(Volume const& rhs) = delete;
+    Volume& operator=(Volume&& rhs) = delete;
+
+    glm::ivec3 const& shape() const;
+    glm::vec3 const& voxel_size() const;
 
     std::pair<float, glm::vec3> const& operator()(int x, int y, int z) const;
     std::pair<float, glm::vec3>& operator()(int x, int y, int z);
-
-    Volume(Volume const& rhs) = delete;
-    Volume(Volume&& rhs) = delete;
-    Volume& operator=(Volume const& rhs) = delete;
-    Volume& operator=(Volume&& rhs) = delete;
+    std::pair<float, glm::vec3> const& operator()(glm::ivec3 index) const;
+    std::pair<float, glm::vec3>& operator()(glm::ivec3 index);
 
     friend std::ostream& operator<<(std::ostream& os, const Volume& volume)
     {
@@ -79,7 +84,7 @@ public:
         os << "shape: " << glm::to_string(volume.m_shape) << '\n';
         os << "min value: " << volume.m_min << '\n';
         os << "max value: " << volume.m_max << '\n';
-        os << "voxel size: " << glm::to_string(volume.m_voxel_size) << '\n';
+        os << "voxel size: " << glm::to_string(volume.m_voxel_size);
 
         return os;
     }

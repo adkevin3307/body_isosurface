@@ -31,6 +31,30 @@ Volume::Volume(string inf_file, string raw_file)
     this->load_raw_file();
 }
 
+Volume::Volume(Volume const& rhs)
+    : m_byte_size(rhs.m_byte_size),
+      m_min(rhs.m_min), m_max(rhs.m_max),
+      m_inf_file(rhs.m_inf_file), m_raw_file(rhs.m_raw_file),
+      m_type(rhs.m_type),
+      m_endian(rhs.m_endian), m_machine_endian(rhs.m_machine_endian),
+      m_shape(rhs.m_shape),
+      m_voxel_size(rhs.m_voxel_size),
+      m_data(rhs.m_data)
+{
+}
+
+Volume::Volume(Volume&& rhs)
+    : m_byte_size(rhs.m_byte_size),
+      m_min(rhs.m_min), m_max(rhs.m_max),
+      m_inf_file(rhs.m_inf_file), m_raw_file(rhs.m_raw_file),
+      m_type(rhs.m_type),
+      m_endian(rhs.m_endian), m_machine_endian(rhs.m_machine_endian),
+      m_shape(std::move(rhs.m_shape)),
+      m_voxel_size(std::move(rhs.m_voxel_size)),
+      m_data(std::move(rhs.m_data))
+{
+}
+
 Volume::~Volume()
 {
     this->m_data.clear();
@@ -191,6 +215,16 @@ void Volume::calculate_gradient()
     }
 }
 
+glm::ivec3 const& Volume::shape() const
+{
+    return this->m_shape;
+}
+
+glm::vec3 const& Volume::voxel_size() const
+{
+    return this->m_voxel_size;
+}
+
 pair<float, glm::vec3> const& Volume::operator()(int x, int y, int z) const
 {
     size_t index = x * this->m_shape.y * this->m_shape.z + y * this->m_shape.z + z;
@@ -211,4 +245,14 @@ pair<float, glm::vec3>& Volume::operator()(int x, int y, int z)
     }
 
     return this->m_data[index];
+}
+
+pair<float, glm::vec3> const& Volume::operator()(glm::ivec3 index) const
+{
+    return this->operator()(index.x, index.y, index.z);
+}
+
+pair<float, glm::vec3>& Volume::operator()(glm::ivec3 index)
+{
+    return this->operator()(index.x, index.y, index.z);
 }
