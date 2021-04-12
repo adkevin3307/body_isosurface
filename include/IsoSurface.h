@@ -1,8 +1,10 @@
 #pragma once
 
+#include <iostream>
 #include <vector>
 #include <utility>
 #include <glm/glm.hpp>
+#include <glm/gtx/string_cast.hpp>
 
 #include "Volume.h"
 
@@ -33,4 +35,14 @@ public:
 
     float const& iso_value() const;
     float& iso_value();
+
+    friend std::ostream& operator<<(std::ostream& os, const IsoSurface& iso_surface)
+    {
+        os << "iso value: " << iso_surface.m_iso_value << '\n';
+        os << "shape: " << glm::to_string(iso_surface.shape()) << '\n';
+        os << "vertices: " << iso_surface.m_vertices.size() << '\n';
+        os << "normals: " << iso_surface.m_normals.size();
+
+        return os;
+    }
 };

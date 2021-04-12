@@ -226,6 +226,11 @@ glm::vec3 const& Volume::voxel_size() const
     return this->m_voxel_size;
 }
 
+float const Volume::average() const
+{
+    return (this->m_max + this->m_min) / 2.0;
+}
+
 pair<float, glm::vec3> const& Volume::operator()(int x, int y, int z) const
 {
     size_t index = x * this->m_shape.y * this->m_shape.z + y * this->m_shape.z + z;

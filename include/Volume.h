@@ -54,6 +54,7 @@ public:
 
     glm::ivec3 const& shape() const;
     glm::vec3 const& voxel_size() const;
+    float const average() const;
 
     std::pair<float, glm::vec3> const& operator()(int x, int y, int z) const;
     std::pair<float, glm::vec3>& operator()(int x, int y, int z);

@@ -2,6 +2,7 @@
 
 #include <iostream>
 #include <stdexcept>
+#include <vector>
 
 #include "GLFW/glfw3.h"
 #include "constant.h"
@@ -215,15 +216,18 @@ void Window::main_loop()
 {
     Volume volume("Data/engine.inf", "Data/engine.raw");
 
-    IsoSurface iso_surface(volume);
-    iso_surface.iso_value() = 80.0;
-
     cout << "==================================================" << '\n';
     cout << volume << '\n';
-    cout << "iso value: " << iso_surface.iso_value() << '\n';
     cout << "==================================================" << '\n';
 
+    IsoSurface iso_surface(volume);
+    iso_surface.iso_value() = volume.average();
+
     iso_surface.run();
+
+    cout << "==================================================" << '\n';
+    cout << iso_surface << '\n';
+    cout << "==================================================" << '\n';
 
     glm::vec3 shape = iso_surface.shape();
     vector<float> vertices = iso_surface.vertices();
@@ -231,10 +235,7 @@ void Window::main_loop()
 
     assert(vertices.size() == normals.size());
 
-    int size = vertices.size() / 3;
-
     vector<GLfloat> data;
-
     for (size_t i = 0; i < vertices.size(); i += 3) {
         data.push_back(vertices[i]);
         data.push_back(vertices[i + 1]);
@@ -270,7 +271,7 @@ void Window::main_loop()
         BufferManagement::unbind();
 
         BufferManagement::bind(buffer);
-        BufferManagement::draw(buffer, 0, size, GL_TRIANGLES, GL_FILL);
+        BufferManagement::draw(buffer, 0, data.size() / 6, GL_TRIANGLES, GL_FILL);
         BufferManagement::unbind();
 
         glfwSwapBuffers(this->window);
