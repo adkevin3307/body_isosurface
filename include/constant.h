@@ -16,6 +16,25 @@ namespace CONSTANT {
         BIG
     };
 
+    enum BUTTON {
+        LEFT,
+        RIGHT
+    };
+
+    enum TRANSFORMATION {
+        MODEL,
+        VIEW,
+        PROJECTION,
+        MODEL_VIEW_PROJECTION,
+        TRANSLATE,
+        SCALE,
+        ROTATE
+    };
+
+    constexpr const static int WIDTH = 1440;
+    constexpr const static int HEIGHT = 900;
+    constexpr const static int DEPTH = 5000;
+
     constexpr const static int EDGETABLE[256] = {
         0x0, 0x109, 0x203, 0x30a, 0x406, 0x50f, 0x605, 0x70c,
         0x80c, 0x905, 0xa0f, 0xb06, 0xc0a, 0xd03, 0xe09, 0xf00,
