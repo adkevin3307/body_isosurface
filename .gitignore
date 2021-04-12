@@ -1,0 +1,4 @@
+obj/
+.cache/
+main
+complie_commands.json
