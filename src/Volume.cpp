@@ -29,6 +29,7 @@ Volume::Volume(string inf_file, string raw_file)
 
     this->load_inf_file();
     this->load_raw_file();
+    this->calculate_gradient();
 }
 
 Volume::Volume(Volume const& rhs)
