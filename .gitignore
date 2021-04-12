@@ -1,4 +1,5 @@
 obj/
+Data/
 .cache/
 main
 compile_commands.json
