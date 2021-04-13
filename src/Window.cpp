@@ -3,6 +3,7 @@
 #include <iostream>
 #include <stdexcept>
 #include <vector>
+#include <ctime>
 
 #include "GLFW/glfw3.h"
 #include "constant.h"
@@ -214,19 +215,27 @@ void Window::init()
 
 void Window::main_loop()
 {
-    Volume volume("Data/engine.inf", "Data/engine.raw");
+    clock_t start, stop;
+
+    start = clock();
+    Volume volume("Data/Leg_CT.inf", "Data/Leg_CT.raw");
+    stop = clock();
 
     cout << "==================================================" << '\n';
     cout << volume << '\n';
+    cout << "time: " << (stop - start) << '\n';
     cout << "==================================================" << '\n';
 
+    start = clock();
     IsoSurface iso_surface(volume);
     iso_surface.iso_value() = volume.average();
 
     iso_surface.run();
+    stop = clock();
 
     cout << "==================================================" << '\n';
     cout << iso_surface << '\n';
+    cout << "time: " << (stop - start) << '\n';
     cout << "==================================================" << '\n';
 
     glm::vec3 shape = iso_surface.shape();

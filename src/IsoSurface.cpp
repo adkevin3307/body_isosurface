@@ -82,15 +82,29 @@ void IsoSurface::run()
                 if (CONSTANT::EDGETABLE[index] & 2048) v[11] = this->interpolation(glm::ivec3(i, j + 1, k), glm::ivec3(i + 1, j + 1, k));
 
                 for (auto vertex = 0; CONSTANT::TRIANGLETABLE[index][vertex] != -1 && vertex < 16; vertex += 3) {
-                    for (auto delta_vertex = 0; delta_vertex < 3; delta_vertex++) {
-                        this->m_vertices.push_back(v[CONSTANT::TRIANGLETABLE[index][vertex + delta_vertex]].first.x);
-                        this->m_vertices.push_back(v[CONSTANT::TRIANGLETABLE[index][vertex + delta_vertex]].first.y);
-                        this->m_vertices.push_back(v[CONSTANT::TRIANGLETABLE[index][vertex + delta_vertex]].first.z);
+                    this->m_vertices.push_back(v[CONSTANT::TRIANGLETABLE[index][vertex + 0]].first.x);
+                    this->m_vertices.push_back(v[CONSTANT::TRIANGLETABLE[index][vertex + 0]].first.y);
+                    this->m_vertices.push_back(v[CONSTANT::TRIANGLETABLE[index][vertex + 0]].first.z);
 
-                        this->m_normals.push_back(v[CONSTANT::TRIANGLETABLE[index][vertex + delta_vertex]].second.x);
-                        this->m_normals.push_back(v[CONSTANT::TRIANGLETABLE[index][vertex + delta_vertex]].second.y);
-                        this->m_normals.push_back(v[CONSTANT::TRIANGLETABLE[index][vertex + delta_vertex]].second.z);
-                    }
+                    this->m_vertices.push_back(v[CONSTANT::TRIANGLETABLE[index][vertex + 1]].first.x);
+                    this->m_vertices.push_back(v[CONSTANT::TRIANGLETABLE[index][vertex + 1]].first.y);
+                    this->m_vertices.push_back(v[CONSTANT::TRIANGLETABLE[index][vertex + 1]].first.z);
+
+                    this->m_vertices.push_back(v[CONSTANT::TRIANGLETABLE[index][vertex + 2]].first.x);
+                    this->m_vertices.push_back(v[CONSTANT::TRIANGLETABLE[index][vertex + 2]].first.y);
+                    this->m_vertices.push_back(v[CONSTANT::TRIANGLETABLE[index][vertex + 2]].first.z);
+
+                    this->m_normals.push_back(v[CONSTANT::TRIANGLETABLE[index][vertex + 0]].second.x);
+                    this->m_normals.push_back(v[CONSTANT::TRIANGLETABLE[index][vertex + 0]].second.y);
+                    this->m_normals.push_back(v[CONSTANT::TRIANGLETABLE[index][vertex + 0]].second.z);
+
+                    this->m_normals.push_back(v[CONSTANT::TRIANGLETABLE[index][vertex + 1]].second.x);
+                    this->m_normals.push_back(v[CONSTANT::TRIANGLETABLE[index][vertex + 1]].second.y);
+                    this->m_normals.push_back(v[CONSTANT::TRIANGLETABLE[index][vertex + 1]].second.z);
+
+                    this->m_normals.push_back(v[CONSTANT::TRIANGLETABLE[index][vertex + 2]].second.x);
+                    this->m_normals.push_back(v[CONSTANT::TRIANGLETABLE[index][vertex + 2]].second.y);
+                    this->m_normals.push_back(v[CONSTANT::TRIANGLETABLE[index][vertex + 2]].second.z);
                 }
             }
         }

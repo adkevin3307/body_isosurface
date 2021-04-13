@@ -28,10 +28,10 @@ private:
     {
         T value;
 
-        if (this->m_machine_endian != this->m_endian) {
-            std::reverse(data + index, data + index + this->m_byte_size);
-        }
         std::memcpy(&value, data + index, this->m_byte_size);
+        if (this->m_machine_endian != this->m_endian) {
+            std::reverse(&value, &value + this->m_byte_size);
+        }
 
         return value;
     }
