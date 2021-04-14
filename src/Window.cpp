@@ -6,7 +6,12 @@
 #include <ctime>
 
 #include "GLFW/glfw3.h"
+#include "imgui/imgui.h"
+#include "imgui/imgui_impl_opengl3.h"
+#include "imgui/imgui_impl_glfw.h"
+
 #include "constant.h"
+
 #include "Transformation.h"
 #include "BufferManagement.h"
 #include "Volume.h"
@@ -15,7 +20,7 @@
 using namespace std;
 
 Window::Window()
-    : last_xpos(0.0), last_ypos(0.0), rate(3.0)
+    : last_xpos(0.0), last_ypos(0.0), rate(5.0)
 {
 }
 
@@ -104,6 +109,7 @@ void Window::error_callback(int error, const char* description)
 
 void Window::framebuffer_size_callback(GLFWwindow* window, int width, int height)
 {
+    ImGui::SetWindowSize("Control", ImVec2(width / 3.0, height / 3.0));
     glViewport(0, 0, width, height);
 }
 
@@ -122,6 +128,14 @@ void Window::key_callback(GLFWwindow* window, int key, int scancode, int action,
             this->camera.reset();
 
             break;
+        case GLFW_KEY_LEFT_CONTROL:
+            ImGui_ImplGlfw_KeyCallback(window, key, scancode, action, mods);
+
+            break;
+        case GLFW_KEY_RIGHT_CONTROL:
+            ImGui_ImplGlfw_KeyCallback(window, key, scancode, action, mods);
+
+            break;
         default:
             break;
     }
@@ -129,6 +143,8 @@ void Window::key_callback(GLFWwindow* window, int key, int scancode, int action,
 
 void Window::mouse_callback(GLFWwindow* window, double xpos, double ypos)
 {
+    if (ImGui::IsWindowFocused(ImGuiFocusedFlags_AnyWindow)) return;
+
     if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS) {
         this->camera.process_mouse(CONSTANT::BUTTON::LEFT, xpos - this->last_xpos, this->last_ypos - ypos);
     }
@@ -143,7 +159,13 @@ void Window::mouse_callback(GLFWwindow* window, double xpos, double ypos)
 
 void Window::scroll_callback(GLFWwindow* window, double xoffset, double yoffset)
 {
-    this->rate += yoffset / 10.0;
+    if (ImGui::IsWindowHovered(ImGuiHoveredFlags_AnyWindow)) {
+        ImGui_ImplGlfw_ScrollCallback(window, xoffset, yoffset);
+
+        return;
+    }
+
+    this->rate += yoffset / 1.0;
     if (this->rate < 0.1) this->rate = 0.1;
 }
 
@@ -173,6 +195,15 @@ void Window::set_callback()
     glfwSetScrollCallback(this->window, scrollCallback);
 }
 
+void Window::gui()
+{
+    ImGui::SetNextWindowPos(ImVec2(10, 10), ImGuiCond_Once);
+    ImGui::SetNextWindowSize(ImVec2(CONSTANT::WIDTH / 3.0, CONSTANT::HEIGHT / 3.0), ImGuiCond_Once);
+
+    ImGui::Begin("Control");
+    ImGui::End();
+}
+
 void Window::init()
 {
     glfwSetErrorCallback(error_callback);
@@ -196,6 +227,17 @@ void Window::init()
         throw runtime_error("Failed to initialize GLEW");
     }
 
+    IMGUI_CHECKVERSION();
+    ImGui::CreateContext();
+    ImGuiIO& io = ImGui::GetIO();
+    io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;
+    io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;
+
+    ImGui::StyleColorsDark();
+
+    ImGui_ImplGlfw_InitForOpenGL(this->window, true);
+    ImGui_ImplOpenGL3_Init("#version 440");
+
     glEnable(GL_DEBUG_OUTPUT);
     glEnable(GL_DEBUG_OUTPUT_SYNCHRONOUS);
     glDebugMessageCallback(debug_callback, nullptr);
@@ -218,7 +260,8 @@ void Window::main_loop()
     clock_t start, stop;
 
     start = clock();
-    Volume volume("Data/Leg_CT.inf", "Data/Leg_CT.raw");
+    Volume volume("Data/engine.inf", "Data/engine.raw");
+    // Volume volume("Data/Leg_CT.inf", "Data/Leg_CT.raw");
     stop = clock();
 
     cout << "==================================================" << '\n';
@@ -257,9 +300,21 @@ void Window::main_loop()
 
     Buffer buffer = BufferManagement::generate();
 
+    BufferManagement::bind(buffer);
+    BufferManagement::fill(data);
+    BufferManagement::set(0, 3, 6, 0);
+    BufferManagement::set(1, 3, 6, 3 * sizeof(GLfloat));
+    BufferManagement::unbind();
+
     while (!glfwWindowShouldClose(this->window)) {
         glClearColor(0.2, 0.2, 0.2, 1.0);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+        ImGui_ImplOpenGL3_NewFrame();
+        ImGui_ImplGlfw_NewFrame();
+        ImGui::NewFrame();
+
+        this->gui();
 
         this->shader.use();
 
@@ -274,18 +329,25 @@ void Window::main_loop()
         transformation.set(true);
 
         BufferManagement::bind(buffer);
-        BufferManagement::fill(data);
-        BufferManagement::set(0, 3, 6, 0);
-        BufferManagement::set(1, 3, 6, 3 * sizeof(GLfloat));
+        this->shader.set_uniform("object_color", glm::vec4(0.2, 0.5, 1.0, 1.0));
+        BufferManagement::draw(buffer, 0, data.size() / 6, GL_TRIANGLES, GL_FILL);
         BufferManagement::unbind();
 
         BufferManagement::bind(buffer);
-        BufferManagement::draw(buffer, 0, data.size() / 6, GL_TRIANGLES, GL_FILL);
+        this->shader.set_uniform("object_color", glm::vec4(0.1, 0.4, 1.0, 1.0));
+        BufferManagement::draw(buffer, 0, data.size() / 6, GL_TRIANGLES, GL_LINE);
         BufferManagement::unbind();
+
+        ImGui::Render();
+        ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 
         glfwSwapBuffers(this->window);
         glfwPollEvents();
     }
+
+    ImGui_ImplOpenGL3_Shutdown();
+    ImGui_ImplGlfw_Shutdown();
+    ImGui::DestroyContext();
 
     glfwDestroyWindow(this->window);
     glfwTerminate();
