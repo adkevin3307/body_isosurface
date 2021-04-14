@@ -49,12 +49,14 @@ public:
     Volume(Volume&& rhs);
     ~Volume();
 
-    Volume& operator=(Volume const& rhs) = delete;
-    Volume& operator=(Volume&& rhs) = delete;
+    Volume& operator=(Volume const& rhs);
+    Volume& operator=(Volume&& rhs);
 
     glm::ivec3 const& shape() const;
     glm::vec3 const& voxel_size() const;
     float const average() const;
+    float const min_value() const;
+    float const max_value() const;
 
     std::pair<float, glm::vec3> const& operator()(int x, int y, int z) const;
     std::pair<float, glm::vec3>& operator()(int x, int y, int z);

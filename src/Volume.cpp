@@ -62,6 +62,42 @@ Volume::~Volume()
     this->m_data.shrink_to_fit();
 }
 
+Volume& Volume::operator=(Volume const& rhs)
+{
+    if (this == &rhs) return *this;
+
+    this->m_byte_size = rhs.m_byte_size;
+    this->m_min = rhs.m_min;
+    this->m_max = rhs.m_max;
+    this->m_inf_file = rhs.m_inf_file;
+    this->m_raw_file = rhs.m_raw_file;
+    this->m_type = rhs.m_type;
+    this->m_endian = rhs.m_endian;
+    this->m_shape = rhs.m_shape;
+    this->m_voxel_size = rhs.m_voxel_size;
+    this->m_data = rhs.m_data;
+
+    return *this;
+}
+
+Volume& Volume::operator=(Volume&& rhs)
+{
+    if (this == &rhs) return *this;
+
+    this->m_byte_size = rhs.m_byte_size;
+    this->m_min = rhs.m_min;
+    this->m_max = rhs.m_max;
+    this->m_inf_file = rhs.m_inf_file;
+    this->m_raw_file = rhs.m_raw_file;
+    this->m_type = rhs.m_type;
+    this->m_endian = rhs.m_endian;
+    this->m_shape = rhs.m_shape;
+    this->m_voxel_size = rhs.m_voxel_size;
+    this->m_data = move(rhs.m_data);
+
+    return *this;
+}
+
 void Volume::load_inf_file()
 {
     string s;
@@ -229,6 +265,16 @@ glm::vec3 const& Volume::voxel_size() const
 float const Volume::average() const
 {
     return (this->m_max + this->m_min) / 2.0;
+}
+
+float const Volume::min_value() const
+{
+    return this->m_min;
+}
+
+float const Volume::max_value() const
+{
+    return this->m_max;
 }
 
 pair<float, glm::vec3> const& Volume::operator()(int x, int y, int z) const
