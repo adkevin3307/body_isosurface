@@ -14,7 +14,7 @@ Buffer BufferManagement::generate()
     return buffer;
 }
 
-void BufferManagement::bind(Buffer& buffer)
+void BufferManagement::bind(const Buffer& buffer)
 {
     glBindVertexArray(buffer.vertex_array);
     glBindBuffer(GL_ARRAY_BUFFER, buffer.vertex_buffer);
@@ -37,7 +37,7 @@ void BufferManagement::unbind()
     glBindVertexArray(0);
 }
 
-void BufferManagement::draw(Buffer& buffer, int first, int count, GLenum render_mode, GLenum rasterize_mode)
+void BufferManagement::draw(const Buffer& buffer, int first, int count, GLenum render_mode, GLenum rasterize_mode)
 {
     glPolygonMode(GL_FRONT_AND_BACK, rasterize_mode);
     glDrawArrays(render_mode, first, count);

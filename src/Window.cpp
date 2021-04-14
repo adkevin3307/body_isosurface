@@ -4,6 +4,7 @@
 #include <stdexcept>
 #include <vector>
 #include <ctime>
+#include <filesystem>
 
 #include "GLFW/glfw3.h"
 #include "imgui/imgui.h"
@@ -16,8 +17,138 @@
 #include "BufferManagement.h"
 #include "Volume.h"
 #include "IsoSurface.h"
+#include "MeshManagement.h"
 
 using namespace std;
+
+void load(string filename)
+{
+    if (MeshManagement::exist(filename)) return;
+
+    clock_t start, stop;
+
+    start = clock();
+    Volume volume("Data" / filesystem::path(filename + ".inf"), "Data" / filesystem::path(filename + ".raw"));
+    stop = clock();
+
+    cout << "==================================================" << '\n';
+    cout << volume << '\n';
+    cout << "time: " << (stop - start) << '\n';
+    cout << "==================================================" << '\n';
+
+    MeshManagement::add(filename, volume);
+}
+
+void show(string filename, float iso_value)
+{
+    if (!MeshManagement::exist(filename)) {
+        load(filename);
+    }
+
+    clock_t start, stop;
+    Volume volume = MeshManagement::get(filename);
+
+    IsoSurface iso_surface(volume);
+    iso_surface.iso_value() = iso_value;
+
+    start = clock();
+    iso_surface.run();
+    stop = clock();
+
+    cout << "==================================================" << '\n';
+    cout << iso_surface << '\n';
+    cout << "time: " << (stop - start) << '\n';
+    cout << "==================================================" << '\n';
+
+    glm::vec3 shape = iso_surface.shape();
+    vector<float> vertices = iso_surface.vertices();
+    vector<float> normals = iso_surface.normals();
+
+    assert(vertices.size() == normals.size());
+
+    vector<GLfloat> data;
+    for (size_t i = 0; i < vertices.size(); i += 3) {
+        data.push_back(vertices[i]);
+        data.push_back(vertices[i + 1]);
+        data.push_back(vertices[i + 2]);
+
+        data.push_back(normals[i]);
+        data.push_back(normals[i + 1]);
+        data.push_back(normals[i + 2]);
+    }
+
+    Buffer buffer = BufferManagement::generate();
+
+    BufferManagement::bind(buffer);
+    BufferManagement::fill(data);
+    BufferManagement::set(0, 3, 6, 0);
+    BufferManagement::set(1, 3, 6, 3 * sizeof(GLfloat));
+    BufferManagement::unbind();
+
+    MeshManagement::add(buffer, shape, data.size());
+}
+
+void gui()
+{
+    static vector<string> datasets;
+
+    if (datasets.size() == 0) {
+        for (auto entry : filesystem::directory_iterator("Data")) {
+            auto it = entry.path().filename().string().find(".inf");
+
+            if (it != string::npos) {
+                string basename = entry.path().stem();
+
+                if (filesystem::exists("Data" / filesystem::path(basename + ".raw"))) {
+                    datasets.push_back(basename);
+                }
+            }
+        }
+
+        sort(datasets.begin(), datasets.end());
+    }
+
+    static float iso_value = 0.0;
+    static string select_data = datasets.front();
+
+    ImGui::SetNextWindowPos(ImVec2(10, 10), ImGuiCond_Once);
+    ImGui::SetNextWindowSize(ImVec2(CONSTANT::WIDTH / 3.0, CONSTANT::HEIGHT / 3.0), ImGuiCond_Once);
+
+    ImGui::Begin("Control");
+    ImGui::SetWindowFontScale(1.2);
+
+    if (ImGui::BeginCombo("## Data", select_data.c_str())) {
+        for (auto data : datasets) {
+            bool selected = (select_data == data);
+
+            if (ImGui::Selectable(data.c_str(), selected)) select_data = data;
+            if (selected) ImGui::SetItemDefaultFocus();
+        }
+
+        ImGui::EndCombo();
+    }
+
+    ImGui::SameLine();
+    if (ImGui::Button("Load")) {
+        load(select_data);
+        iso_value = MeshManagement::get(select_data).average();
+    }
+
+    if (MeshManagement::exist(select_data)) {
+        ImGui::SliderFloat("Iso Value", &iso_value, MeshManagement::get(select_data).min_value(), MeshManagement::get(select_data).max_value());
+
+        if (ImGui::Button("Show")) {
+            show(select_data, iso_value);
+        }
+
+        ImGui::SameLine();
+        if (ImGui::Button("Clean")) {
+            MeshManagement::clear();
+        }
+    }
+
+    ImGui::End();
+}
 
 Window::Window()
     : last_xpos(0.0), last_ypos(0.0), rate(5.0)
@@ -143,7 +274,7 @@ void Window::key_callback(GLFWwindow* window, int key, int scancode, int action,
 
 void Window::mouse_callback(GLFWwindow* window, double xpos, double ypos)
 {
-    if (ImGui::IsWindowFocused(ImGuiFocusedFlags_AnyWindow)) return;
+    if (ImGui::IsWindowFocused(ImGuiFocusedFlags_AnyWindow) && ImGui::IsAnyMouseDown()) return;
 
     if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS) {
         this->camera.process_mouse(CONSTANT::BUTTON::LEFT, xpos - this->last_xpos, this->last_ypos - ypos);
@@ -193,15 +324,6 @@ void Window::set_callback()
     glfwSetKeyCallback(this->window, keyCallback);
     glfwSetCursorPosCallback(this->window, mouseCallback);
     glfwSetScrollCallback(this->window, scrollCallback);
-}
-
-void Window::gui()
-{
-    ImGui::SetNextWindowPos(ImVec2(10, 10), ImGuiCond_Once);
-    ImGui::SetNextWindowSize(ImVec2(CONSTANT::WIDTH / 3.0, CONSTANT::HEIGHT / 3.0), ImGuiCond_Once);
-
-    ImGui::Begin("Control");
-    ImGui::End();
 }
 
 void Window::init()
@@ -257,54 +379,23 @@ void Window::init()
 
 void Window::main_loop()
 {
-    clock_t start, stop;
+    glm::vec4 colors[] = {
+        glm::vec4(0.2, 0.5, 1.0, 1.0),
+        glm::vec4(1.0, 0.2, 0.5, 1.0),
+        glm::vec4(0.2, 1.0, 0.5, 1.0),
+        glm::vec4(0.5, 0.2, 1.0, 1.0),
+        glm::vec4(1.0, 0.5, 0.2, 1.0),
+        glm::vec4(0.5, 1.0, 0.2, 1.0)
+    };
 
-    start = clock();
-    Volume volume("Data/engine.inf", "Data/engine.raw");
-    // Volume volume("Data/Leg_CT.inf", "Data/Leg_CT.raw");
-    stop = clock();
-
-    cout << "==================================================" << '\n';
-    cout << volume << '\n';
-    cout << "time: " << (stop - start) << '\n';
-    cout << "==================================================" << '\n';
-
-    start = clock();
-    IsoSurface iso_surface(volume);
-    iso_surface.iso_value() = volume.average();
-
-    iso_surface.run();
-    stop = clock();
-
-    cout << "==================================================" << '\n';
-    cout << iso_surface << '\n';
-    cout << "time: " << (stop - start) << '\n';
-    cout << "==================================================" << '\n';
-
-    glm::vec3 shape = iso_surface.shape();
-    vector<float> vertices = iso_surface.vertices();
-    vector<float> normals = iso_surface.normals();
-
-    assert(vertices.size() == normals.size());
-
-    vector<GLfloat> data;
-    for (size_t i = 0; i < vertices.size(); i += 3) {
-        data.push_back(vertices[i]);
-        data.push_back(vertices[i + 1]);
-        data.push_back(vertices[i + 2]);
-
-        data.push_back(normals[i]);
-        data.push_back(normals[i + 1]);
-        data.push_back(normals[i + 2]);
-    }
-
-    Buffer buffer = BufferManagement::generate();
-
-    BufferManagement::bind(buffer);
-    BufferManagement::fill(data);
-    BufferManagement::set(0, 3, 6, 0);
-    BufferManagement::set(1, 3, 6, 3 * sizeof(GLfloat));
-    BufferManagement::unbind();
+    glm::vec4 line_colors[] = {
+        glm::vec4(0.1, 0.4, 1.0, 1.0),
+        glm::vec4(1.0, 0.1, 0.4, 1.0),
+        glm::vec4(0.1, 1.0, 0.4, 1.0),
+        glm::vec4(0.4, 0.1, 1.0, 1.0),
+        glm::vec4(1.0, 0.4, 0.1, 1.0),
+        glm::vec4(0.4, 1.0, 0.1, 1.0)
+    };
 
     while (!glfwWindowShouldClose(this->window)) {
         glClearColor(0.2, 0.2, 0.2, 1.0);
@@ -314,29 +405,31 @@ void Window::main_loop()
         ImGui_ImplGlfw_NewFrame();
         ImGui::NewFrame();
 
-        this->gui();
+        gui();
 
         this->shader.use();
 
         this->shader.set_uniform("view_pos", this->camera.position());
         this->shader.set_uniform("light_pos", this->camera.position());
 
-        Transformation transformation(this->shader);
-        transformation.set_projection(CONSTANT::WIDTH, CONSTANT::HEIGHT, this->rate, CONSTANT::DEPTH * -1, CONSTANT::DEPTH);
-        transformation.set_view(this->camera.view_matrix());
-        transformation.set_model(CONSTANT::TRANSFORMATION::TRANSLATE, -1.0f * shape / 2.0f);
+        for (size_t i = 0; i < MeshManagement::size; i++) {
+            Transformation transformation(this->shader);
+            transformation.set_projection(CONSTANT::WIDTH, CONSTANT::HEIGHT, this->rate, CONSTANT::DEPTH * -1, CONSTANT::DEPTH);
+            transformation.set_view(this->camera.view_matrix());
+            transformation.set_model(CONSTANT::TRANSFORMATION::TRANSLATE, -1.0f * MeshManagement::get(i).shape() / 2.0f);
 
-        transformation.set(true);
+            transformation.set(true);
 
-        BufferManagement::bind(buffer);
-        this->shader.set_uniform("object_color", glm::vec4(0.2, 0.5, 1.0, 1.0));
-        BufferManagement::draw(buffer, 0, data.size() / 6, GL_TRIANGLES, GL_FILL);
-        BufferManagement::unbind();
+            BufferManagement::bind(MeshManagement::get(i).buffer());
+            this->shader.set_uniform("object_color", colors[i % 6]);
+            BufferManagement::draw(MeshManagement::get(i).buffer(), 0, MeshManagement::get(i).size() / 6, GL_TRIANGLES, GL_FILL);
+            BufferManagement::unbind();
 
-        BufferManagement::bind(buffer);
-        this->shader.set_uniform("object_color", glm::vec4(0.1, 0.4, 1.0, 1.0));
-        BufferManagement::draw(buffer, 0, data.size() / 6, GL_TRIANGLES, GL_LINE);
-        BufferManagement::unbind();
+            BufferManagement::bind(MeshManagement::get(i).buffer());
+            this->shader.set_uniform("object_color", line_colors[i % 6]);
+            BufferManagement::draw(MeshManagement::get(i).buffer(), 0, MeshManagement::get(i).size() / 6, GL_TRIANGLES, GL_LINE);
+            BufferManagement::unbind();
+        }
 
         ImGui::Render();
         ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
