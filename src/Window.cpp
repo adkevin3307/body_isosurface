@@ -2,153 +2,20 @@
 
 #include <iostream>
 #include <stdexcept>
-#include <vector>
 #include <ctime>
-#include <filesystem>
 
 #include "GLFW/glfw3.h"
-#include "imgui/imgui.h"
 #include "imgui/imgui_impl_opengl3.h"
 #include "imgui/imgui_impl_glfw.h"
 
 #include "constant.h"
+#include "utils.h"
 
 #include "Transformation.h"
 #include "BufferManagement.h"
-#include "Volume.h"
-#include "IsoSurface.h"
 #include "MeshManagement.h"
 
 using namespace std;
-
-void load(string filename)
-{
-    if (MeshManagement::exist(filename)) return;
-
-    clock_t start, stop;
-
-    start = clock();
-    Volume volume("Data" / filesystem::path(filename + ".inf"), "Data" / filesystem::path(filename + ".raw"));
-    stop = clock();
-
-    cout << "==================================================" << '\n';
-    cout << volume << '\n';
-    cout << "time: " << (stop - start) << '\n';
-    cout << "==================================================" << '\n';
-
-    MeshManagement::add(filename, volume);
-}
-
-void show(string filename, float iso_value)
-{
-    if (!MeshManagement::exist(filename)) {
-        load(filename);
-    }
-
-    clock_t start, stop;
-    Volume volume = MeshManagement::get(filename);
-
-    IsoSurface iso_surface(volume);
-    iso_surface.iso_value() = iso_value;
-
-    start = clock();
-    iso_surface.run();
-    stop = clock();
-
-    cout << "==================================================" << '\n';
-    cout << iso_surface << '\n';
-    cout << "time: " << (stop - start) << '\n';
-    cout << "==================================================" << '\n';
-
-    glm::vec3 shape = iso_surface.shape();
-    vector<float> vertices = iso_surface.vertices();
-    vector<float> normals = iso_surface.normals();
-
-    assert(vertices.size() == normals.size());
-
-    vector<GLfloat> data;
-    for (size_t i = 0; i < vertices.size(); i += 3) {
-        data.push_back(vertices[i]);
-        data.push_back(vertices[i + 1]);
-        data.push_back(vertices[i + 2]);
-
-        data.push_back(normals[i]);
-        data.push_back(normals[i + 1]);
-        data.push_back(normals[i + 2]);
-    }
-
-    Buffer buffer = BufferManagement::generate();
-
-    BufferManagement::bind(buffer);
-    BufferManagement::fill(data);
-    BufferManagement::set(0, 3, 6, 0);
-    BufferManagement::set(1, 3, 6, 3 * sizeof(GLfloat));
-    BufferManagement::unbind();
-
-    MeshManagement::add(buffer, shape, data.size());
-}
-
-void gui()
-{
-    static vector<string> datasets;
-
-    if (datasets.size() == 0) {
-        for (auto entry : filesystem::directory_iterator("Data")) {
-            auto it = entry.path().filename().string().find(".inf");
-
-            if (it != string::npos) {
-                string basename = entry.path().stem();
-
-                if (filesystem::exists("Data" / filesystem::path(basename + ".raw"))) {
-                    datasets.push_back(basename);
-                }
-            }
-        }
-
-        sort(datasets.begin(), datasets.end());
-    }
-
-    static float iso_value = 0.0;
-    static string select_data = datasets.front();
-
-    ImGui::SetNextWindowPos(ImVec2(10, 10), ImGuiCond_Once);
-    ImGui::SetNextWindowSize(ImVec2(CONSTANT::WIDTH / 3.0, CONSTANT::HEIGHT / 3.0), ImGuiCond_Once);
-
-    ImGui::Begin("Control");
-    ImGui::SetWindowFontScale(1.2);
-
-    if (ImGui::BeginCombo("## Data", select_data.c_str())) {
-        for (auto data : datasets) {
-            bool selected = (select_data == data);
-
-            if (ImGui::Selectable(data.c_str(), selected)) select_data = data;
-            if (selected) ImGui::SetItemDefaultFocus();
-        }
-
-        ImGui::EndCombo();
-    }
-
-    ImGui::SameLine();
-    if (ImGui::Button("Load")) {
-        load(select_data);
-        iso_value = MeshManagement::get(select_data).average();
-    }
-
-    if (MeshManagement::exist(select_data)) {
-        ImGui::SliderFloat("Iso Value", &iso_value, MeshManagement::get(select_data).min_value(), MeshManagement::get(select_data).max_value());
-
-        if (ImGui::Button("Show")) {
-            show(select_data, iso_value);
-        }
-
-        ImGui::SameLine();
-        if (ImGui::Button("Clean")) {
-            MeshManagement::clear();
-        }
-    }
-
-    ImGui::End();
-}
 
 Window::Window()
     : last_xpos(0.0), last_ypos(0.0), rate(5.0)
@@ -405,7 +272,7 @@ void Window::main_loop()
         ImGui_ImplGlfw_NewFrame();
         ImGui::NewFrame();
 
-        gui();
+        UTILS::GUI();
 
         this->shader.use();
 
