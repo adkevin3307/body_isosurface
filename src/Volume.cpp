@@ -7,7 +7,7 @@
 using namespace std;
 
 Volume::Volume()
-    : m_byte_size(0), m_min(0.0), m_max(0.0), m_inf_file(""), m_raw_file(""), m_type(CONSTANT::TYPE::CHAR), m_endian(CONSTANT::ENDIAN::LITTLE), m_shape(0), m_voxel_size(0.0)
+    : m_byte_size(0), m_min(0.0), m_max(0.0), m_inf_file(""), m_raw_file(""), m_type(CONSTANT::TYPE::CHAR), m_endian(CONSTANT::ENDIAN::LITTLE), m_shape(0), m_voxel_size(1.0)
 {
     short int word = 0x0001;
     char* check = (char*)&word;
