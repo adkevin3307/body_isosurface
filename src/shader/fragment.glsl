@@ -6,11 +6,11 @@ out vec4 color;
 
 uniform vec3 view_pos;
 uniform vec3 light_pos;
+uniform vec4 object_color;
 
 void main()
 {
     vec3 light_color = vec3(1.0);
-    vec4 object_color = vec4(0.2, 0.5, 1.0, 1.0);
 
     vec3 normal = normalize(fragment_normal);
     vec3 view_direction = normalize(fragment_pos - view_pos);
