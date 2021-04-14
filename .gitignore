@@ -2,4 +2,5 @@ obj/
 Data/
 .cache/
 main
+imgui.ini
 compile_commands.json
