@@ -100,6 +100,7 @@ void MeshManagement::clear()
     MeshManagement::size = 0;
 
     MeshManagement::m_datas.clear();
+    MeshManagement::m_datas.shrink_to_fit();
 }
 
 Volume const& MeshManagement::get(std::string name)
