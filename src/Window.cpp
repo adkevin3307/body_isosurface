@@ -155,7 +155,7 @@ void Window::mouse_callback(GLFWwindow* window, double xpos, double ypos)
 
                 break;
             case CONSTANT::F2:
-                this->slice.process_mouse(CONSTANT::BUTTON::LEFT, xpos - this->last_xpos, this->last_ypos - ypos);
+                this->slice.process_mouse(CONSTANT::BUTTON::LEFT, this->last_xpos - xpos, this->last_ypos - ypos);
 
                 break;
             default:
