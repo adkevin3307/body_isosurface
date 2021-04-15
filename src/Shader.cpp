@@ -5,6 +5,7 @@
 #include <fstream>
 #include <sstream>
 #include <iostream>
+#include <stdexcept>
 
 using namespace std;
 
@@ -14,79 +15,113 @@ Shader::Shader()
 
 Shader::Shader(string vertex_path, string fragment_path)
 {
-    string vertex_code, fragment_code;
-    fstream vertex_file, fragment_file;
-    stringstream vertex_stream, fragment_stream;
+    string vertex_code = this->code(vertex_path);
+    string fragment_code = this->code(fragment_path);
 
-    vertex_file.open(vertex_path, ios::in);
-    fragment_file.open(fragment_path, ios::in);
+    GLuint vertex = glCreateShader(GL_VERTEX_SHADER);
+    GLuint fragment = glCreateShader(GL_FRAGMENT_SHADER);
 
-    vertex_stream << vertex_file.rdbuf();
-    fragment_stream << fragment_file.rdbuf();
+    this->compile(vertex, vertex_path, vertex_code, "VERTEX");
+    this->compile(fragment, fragment_path, fragment_code, "FRAGMENT");
 
-    vertex_code = vertex_stream.str();
-    fragment_code = fragment_stream.str();
-
-    vertex_file.close();
-    fragment_file.close();
-
-    const char* vertex_code_temp = vertex_code.c_str();
-    const char* fragment_code_temp = fragment_code.c_str();
-
-    GLuint vertex, fragment;
-
-    vertex = glCreateShader(GL_VERTEX_SHADER);
-    glShaderSource(vertex, 1, &vertex_code_temp, NULL);
-    glCompileShader(vertex);
-
-    GLint compile_vertex_success;
-    GLchar compile_vertex_log[1024];
-    glGetShaderiv(vertex, GL_COMPILE_STATUS, &compile_vertex_success);
-    if (compile_vertex_success) {
-        cout << vertex_path << ": SHADER::VERTEX::COMPILATION_SUCCESS" << '\n';
-    }
-    else {
-        glGetShaderInfoLog(vertex, 1024, NULL, compile_vertex_log);
-        cerr << "ERROR::SHADER::VERTEX::COMPILATION_FAILED: " << compile_vertex_log << '\n';
-    }
-
-    fragment = glCreateShader(GL_FRAGMENT_SHADER);
-    glShaderSource(fragment, 1, &fragment_code_temp, NULL);
-    glCompileShader(fragment);
-
-    GLint compile_fragment_success;
-    GLchar compile_fragment_log[1024];
-    glGetShaderiv(fragment, GL_COMPILE_STATUS, &compile_fragment_success);
-    if (compile_fragment_success) {
-        cout << fragment_path << ": SHADER::FRAGMENT::COMPILATION_SUCCESS" << '\n';
-    }
-    else {
-        glGetShaderInfoLog(fragment, 1024, NULL, compile_fragment_log);
-        cerr << "ERROR::SHADER::FRAGMENT::COMPILATION_FAILED: " << compile_fragment_log << '\n';
-    }
-
-    this->ID = glCreateProgram();
-    glAttachShader(this->ID, vertex);
-    glAttachShader(this->ID, fragment);
-    glLinkProgram(ID);
-
-    GLint link_success;
-    GLchar link_log[1024];
-    glGetProgramiv(ID, GL_LINK_STATUS, &link_success);
-    if (link_success) {
-        cout << "SHADER::PROGRAM::LINKING_SUCCESS" << '\n';
-    }
-    else {
-        glGetProgramInfoLog(ID, 1024, NULL, link_log);
-        cerr << "ERROR::SHADER::PROGRAM::LINKING_FAILED: " << link_log << '\n';
-    }
+    this->link(vertex, fragment);
 
     glDeleteShader(vertex);
     glDeleteShader(fragment);
 }
 
+Shader::Shader(Shader const& rhs)
+    : ID(rhs.ID)
+{
+}
+
+Shader::Shader(Shader&& rhs)
+    : ID(rhs.ID)
+{
+}
+
 Shader::~Shader()
 {
+}
+
+Shader& Shader::operator=(Shader const& rhs)
+{
+    if (this == &rhs) return *this;
+
+    this->ID = rhs.ID;
+
+    return *this;
+}
+
+Shader& Shader::operator=(Shader&& rhs)
+{
+    if (this == &rhs) return *this;
+
+    this->ID = rhs.ID;
+
+    return *this;
+}
+
+string Shader::code(string path)
+{
+    string code;
+
+    fstream file;
+    file.open(path, ios::in);
+
+    stringstream ss;
+    ss << file.rdbuf();
+    code = ss.str();
+
+    file.close();
+
+    return code;
+}
+
+void Shader::compile(GLuint& shader, string path, string code, string type)
+{
+    const char* code_c_str = code.c_str();
+
+    glShaderSource(shader, 1, &code_c_str, NULL);
+    glCompileShader(shader);
+
+    GLint compile_success;
+    GLchar compile_log[1024];
+
+    glGetShaderiv(shader, GL_COMPILE_STATUS, &compile_success);
+
+    if (compile_success) {
+        cout << path << ": SHADER::" << type << "::COMPILATION_SUCCESS" << '\n';
+    }
+    else {
+        glGetShaderInfoLog(shader, 1024, NULL, compile_log);
+
+        throw runtime_error("ERROR::SHADER::" + type + "::COMPILATION_FAILED" + compile_log);
+    }
+}
+
+void Shader::link(GLuint vertex, GLuint fragment)
+{
+    this->ID = glCreateProgram();
+
+    glAttachShader(this->ID, vertex);
+    glAttachShader(this->ID, fragment);
+
+    glLinkProgram(ID);
+
+    GLint link_success;
+    GLchar link_log[1024];
+
+    glGetProgramiv(this->ID, GL_LINK_STATUS, &link_success);
+
+    if (link_success) {
+        cout << "SHADER::PROGRAM::LINKING_SUCCESS" << '\n';
+    }
+    else {
+        glGetProgramInfoLog(ID, 1024, NULL, link_log);
+
+        throw runtime_error("ERROR::SHADER::PROGRAM::LINKING_FAILED: " + string(link_log));
+    }
 }
 
 void Shader::use()

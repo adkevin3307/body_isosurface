@@ -28,6 +28,11 @@ public:
     Window();
     ~Window();
 
+    Window(Window const& rhs) = delete;
+    Window(Window&& rhs) = delete;
+    Window& operator=(Window const& rhs) = delete;
+    Window& operator=(Window&& rhs) = delete;
+
     void init();
     void main_loop();
 };

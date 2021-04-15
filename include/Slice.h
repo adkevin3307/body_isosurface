@@ -10,7 +10,7 @@ private:
     glm::vec3 m_center, m_normal, m_position;
     GLfloat m_radius, m_yaw, m_pitch, m_sensitivity;
 
-    void update(bool keep = false);
+    void update();
 
 public:
     Slice();

@@ -8,6 +8,8 @@
 #include "imgui/imgui_impl_opengl3.h"
 #include "imgui/imgui_impl_glfw.h"
 
+#include "glm/glm.hpp"
+
 #include "constant.h"
 #include "utils.h"
 
@@ -243,6 +245,7 @@ void Window::init()
 
     if (!(this->window)) {
         glfwTerminate();
+
         throw runtime_error("Failed to create GLFW window");
     }
 
@@ -282,7 +285,7 @@ void Window::init()
 
 void Window::main_loop()
 {
-    glm::vec4 colors[] = {
+    constexpr const glm::vec4 colors[] = {
         glm::vec4(0.2, 0.5, 1.0, 1.0),
         glm::vec4(1.0, 0.2, 0.5, 1.0),
         glm::vec4(0.2, 1.0, 0.5, 1.0),
@@ -291,7 +294,7 @@ void Window::main_loop()
         glm::vec4(0.5, 1.0, 0.2, 1.0)
     };
 
-    glm::vec4 line_colors[] = {
+    constexpr const glm::vec4 line_colors[] = {
         glm::vec4(0.1, 0.4, 1.0, 1.0),
         glm::vec4(1.0, 0.1, 0.4, 1.0),
         glm::vec4(0.1, 1.0, 0.4, 1.0),
