@@ -3,12 +3,10 @@
 #include <iostream>
 #include <stdexcept>
 #include <ctime>
-
-#include "GLFW/glfw3.h"
-#include "imgui/imgui_impl_opengl3.h"
-#include "imgui/imgui_impl_glfw.h"
-
-#include "glm/glm.hpp"
+#include <GLFW/glfw3.h>
+#include <imgui/imgui_impl_opengl3.h>
+#include <imgui/imgui_impl_glfw.h>
+#include <glm/glm.hpp>
 
 #include "constant.h"
 #include "utils.h"

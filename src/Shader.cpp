@@ -1,11 +1,11 @@
 #include "Shader.h"
 
-#include <glm/gtc/type_ptr.hpp>
-
 #include <fstream>
 #include <sstream>
 #include <iostream>
 #include <stdexcept>
+
+#include <glm/gtc/type_ptr.hpp>
 
 using namespace std;
 

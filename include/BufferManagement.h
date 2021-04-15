@@ -1,7 +1,8 @@
 #pragma once
 
-#include <GL/glew.h>
 #include <vector>
+
+#include <GL/glew.h>
 
 class Buffer {
 private:

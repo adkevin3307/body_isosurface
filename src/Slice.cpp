@@ -1,6 +1,5 @@
 #include "Slice.h"
 
-#include <iostream>
 #include "glm/gtx/string_cast.hpp"
 
 using namespace std;
