@@ -18,7 +18,16 @@ namespace CONSTANT {
 
     enum BUTTON {
         LEFT,
-        RIGHT
+        RIGHT,
+        MIDDLE
+    };
+
+    enum MODE {
+        F1,
+        F2,
+        F3,
+        F4,
+        F5
     };
 
     enum TRANSFORMATION {

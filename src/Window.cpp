@@ -18,7 +18,7 @@
 using namespace std;
 
 Window::Window()
-    : last_xpos(0.0), last_ypos(0.0), rate(5.0)
+    : last_xpos(0.0), last_ypos(0.0), rate(5.0), m_mode(CONSTANT::F1)
 {
 }
 
@@ -115,23 +115,26 @@ void Window::key_callback(GLFWwindow* window, int key, int scancode, int action,
 {
     switch (key) {
         case GLFW_KEY_ESCAPE:
-            glfwSetWindowShouldClose(window, true);
-
-            break;
         case GLFW_KEY_Q:
             glfwSetWindowShouldClose(window, true);
 
             break;
         case GLFW_KEY_SPACE:
             this->camera.reset();
+            this->slice.reset();
 
             break;
         case GLFW_KEY_LEFT_CONTROL:
+        case GLFW_KEY_RIGHT_CONTROL:
             ImGui_ImplGlfw_KeyCallback(window, key, scancode, action, mods);
 
             break;
-        case GLFW_KEY_RIGHT_CONTROL:
-            ImGui_ImplGlfw_KeyCallback(window, key, scancode, action, mods);
+        case GLFW_KEY_F1:
+            this->m_mode = CONSTANT::F1;
+
+            break;
+        case GLFW_KEY_F2:
+            this->m_mode = CONSTANT::F2;
 
             break;
         default:
@@ -144,11 +147,33 @@ void Window::mouse_callback(GLFWwindow* window, double xpos, double ypos)
     if (ImGui::IsWindowFocused(ImGuiFocusedFlags_AnyWindow) && ImGui::IsAnyMouseDown()) return;
 
     if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS) {
-        this->camera.process_mouse(CONSTANT::BUTTON::LEFT, xpos - this->last_xpos, this->last_ypos - ypos);
+        switch (this->m_mode) {
+            case CONSTANT::F1:
+                this->camera.process_mouse(CONSTANT::BUTTON::LEFT, xpos - this->last_xpos, this->last_ypos - ypos);
+
+                break;
+            case CONSTANT::F2:
+                this->slice.process_mouse(CONSTANT::BUTTON::LEFT, xpos - this->last_xpos, this->last_ypos - ypos);
+
+                break;
+            default:
+                break;
+        }
     }
 
     if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_RIGHT) == GLFW_PRESS) {
-        this->camera.process_mouse(CONSTANT::BUTTON::RIGHT, this->last_xpos - xpos, ypos - this->last_ypos);
+        switch (this->m_mode) {
+            case CONSTANT::F1:
+                this->camera.process_mouse(CONSTANT::BUTTON::RIGHT, this->last_xpos - xpos, ypos - this->last_ypos);
+
+                break;
+            case CONSTANT::F2:
+                this->slice.process_mouse(CONSTANT::BUTTON::RIGHT, this->last_xpos - xpos, ypos - this->last_ypos);
+
+                break;
+            default:
+                break;
+        }
     }
 
     this->last_xpos = xpos;
@@ -163,8 +188,19 @@ void Window::scroll_callback(GLFWwindow* window, double xoffset, double yoffset)
         return;
     }
 
-    this->rate += yoffset / 1.0;
-    if (this->rate < 0.1) this->rate = 0.1;
+    switch (this->m_mode) {
+        case CONSTANT::F1:
+            this->rate += yoffset / 1.0;
+            if (this->rate < 0.1) this->rate = 0.1;
+
+            break;
+        case CONSTANT::F2:
+            this->slice.process_mouse(CONSTANT::BUTTON::MIDDLE, xoffset, yoffset);
+
+            break;
+        default:
+            break;
+    }
 }
 
 void Window::set_callback()
@@ -278,6 +314,7 @@ void Window::main_loop()
 
         this->shader.set_uniform("view_pos", this->camera.position());
         this->shader.set_uniform("light_pos", this->camera.position());
+        this->shader.set_uniform("clip_plane", this->slice.normal());
 
         for (size_t i = 0; i < MeshManagement::size; i++) {
             Transformation transformation(this->shader);

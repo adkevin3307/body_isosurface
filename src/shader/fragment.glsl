@@ -7,9 +7,12 @@ out vec4 color;
 uniform vec3 view_pos;
 uniform vec3 light_pos;
 uniform vec4 object_color;
+uniform vec4 clip_plane;
 
 void main()
 {
+    if (dot(vec4(fragment_pos, 1.0), clip_plane) < 0.0) discard;
+
     vec3 light_color = vec3(1.0);
 
     vec3 normal = normalize(fragment_normal);
