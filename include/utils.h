@@ -6,6 +6,7 @@
 #include <filesystem>
 #include <imgui/imgui.h>
 
+#include "Timer.h"
 #include "Volume.h"
 #include "IsoSurface.h"
 #include "MeshManagement.h"
@@ -15,15 +16,13 @@ namespace UTILS {
     {
         if (MeshManagement::exist(filename)) return;
 
-        clock_t start, stop;
-
-        start = clock();
+        Timer::begin();
         Volume volume("Data" / std::filesystem::path(filename + ".inf"), "Data" / std::filesystem::path(filename + ".raw"));
-        stop = clock();
+        Timer::end();
 
         std::cout << "==================================================" << '\n';
         std::cout << volume << '\n';
-        std::cout << "time: " << (stop - start) << '\n';
+        std::cout << "time: " << Timer::time() << '\n';
         std::cout << "==================================================" << '\n';
 
         MeshManagement::add(filename, volume);
@@ -35,19 +34,18 @@ namespace UTILS {
             load(filename);
         }
 
-        clock_t start, stop;
         Volume volume = MeshManagement::get(filename);
 
         IsoSurface iso_surface(volume);
         iso_surface.iso_value() = iso_value;
 
-        start = clock();
+        Timer::begin();
         iso_surface.run();
-        stop = clock();
+        Timer::end();
 
         std::cout << "==================================================" << '\n';
         std::cout << iso_surface << '\n';
-        std::cout << "time: " << (stop - start) << '\n';
+        std::cout << "time: " << Timer::time() << '\n';
         std::cout << "==================================================" << '\n';
 
         glm::vec3 shape = iso_surface.shape();

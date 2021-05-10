@@ -7,10 +7,14 @@
 using namespace std;
 
 Volume::Volume()
-    : m_byte_size(0), m_min(0.0), m_max(0.0), m_inf_file(""), m_raw_file(""), m_type(CONSTANT::TYPE::CHAR), m_endian(CONSTANT::ENDIAN::LITTLE), m_shape(0), m_voxel_size(1.0)
+    : m_byte_size(0), m_min(0.0), m_max(0.0),
+      m_inf_file(""), m_raw_file(""),
+      m_type(CONSTANT::TYPE::CHAR), m_endian(CONSTANT::ENDIAN::LITTLE),
+      m_shape(0), m_voxel_size(1.0)
 {
     short int word = 0x0001;
     char* check = (char*)&word;
+
     this->m_machine_endian = (check[0] ? CONSTANT::ENDIAN::LITTLE : CONSTANT::ENDIAN::BIG);
 }
 
@@ -29,7 +33,7 @@ Volume::Volume(string inf_file, string raw_file)
 
     this->load_inf_file();
     this->load_raw_file();
-    this->calculate_gradient();
+    this->gradient();
 }
 
 Volume::Volume(Volume const& rhs)
@@ -226,27 +230,23 @@ void Volume::load_raw_file()
     delete[] byte_data;
 }
 
-glm::vec3 Volume::gradient(int x, int y, int z)
+void Volume::gradient()
 {
-    glm::vec3 result;
-
-    glm::ivec3 largest(min(this->m_shape.x - 1, x + 1), min(this->m_shape.y - 1, y + 1), min(this->m_shape.z - 1, z + 1));
-    glm::ivec3 smallest(max(0, x - 1), max(0, y - 1), max(0, z - 1));
-    glm::vec3 delta = (glm::vec3(largest) - glm::vec3(smallest)) * this->m_voxel_size;
-
-    result.x = (this->operator()(largest.x, y, z).first - this->operator()(smallest.x, y, z).first);
-    result.y = (this->operator()(x, largest.y, z).first - this->operator()(x, smallest.y, z).first);
-    result.z = (this->operator()(x, y, largest.z).first - this->operator()(x, y, smallest.z).first);
-
-    return (result / delta);
-}
-
-void Volume::calculate_gradient()
-{
+    #pragma omp parallel for collapse(3)
     for (auto i = 0; i < this->m_shape.x; i++) {
         for (auto j = 0; j < this->m_shape.y; j++) {
             for (auto k = 0; k < this->m_shape.z; k++) {
-                this->operator()(i, j, k).second = this->gradient(i, j, k);
+                int x1 = min(this->m_shape.x - 1, i + 1);
+                int y1 = min(this->m_shape.y - 1, j + 1);
+                int z1 = min(this->m_shape.z - 1, k + 1);
+
+                int x2 = max(0, i - 1);
+                int y2 = max(0, j - 1);
+                int z2 = max(0, k - 1);
+
+                this->operator()(i, j, k).second.x = (this->operator()(x1, j, k).first - this->operator()(x2, j, k).first) / ((x1 - x2) * this->m_voxel_size.x);
+                this->operator()(i, j, k).second.y = (this->operator()(i, y1, k).first - this->operator()(i, y2, k).first) / ((y1 - y2) * this->m_voxel_size.y);
+                this->operator()(i, j, k).second.z = (this->operator()(i, j, z1).first - this->operator()(i, j, z2).first) / ((z1 - z2) * this->m_voxel_size.z);
             }
         }
     }

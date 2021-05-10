@@ -38,9 +38,7 @@ private:
 
     void load_inf_file();
     void load_raw_file();
-
-    glm::vec3 gradient(int x, int y, int z);
-    void calculate_gradient();
+    void gradient();
 
 public:
     Volume();
