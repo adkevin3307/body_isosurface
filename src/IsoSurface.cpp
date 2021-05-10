@@ -53,6 +53,7 @@ void IsoSurface::run()
 {
     #pragma omp parallel
     {
+        pair<glm::vec3, glm::vec3> v[12];
         vector<pair<glm::vec3, glm::vec3>> local_v;
 
         #pragma omp for
@@ -60,7 +61,6 @@ void IsoSurface::run()
             for (auto j = 0; j < this->m_volume.shape().y - 1; j++) {
                 for (auto k = 0; k < this->m_volume.shape().z - 1; k++) {
                     int index = 0;
-                    pair<glm::vec3, glm::vec3> v[12];
 
                     if (this->m_volume(i, j, k).first < this->m_iso_value) index |= 1;
                     if (this->m_volume(i, j, k + 1).first < this->m_iso_value) index |= 2;
