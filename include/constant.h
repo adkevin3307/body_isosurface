@@ -1,5 +1,7 @@
 #pragma once
 
+#include <glm/glm.hpp>
+
 namespace CONSTANT {
     enum TYPE {
         UNSIGNED_CHAR,
@@ -43,6 +45,11 @@ namespace CONSTANT {
     constexpr const static int WIDTH = 1440;
     constexpr const static int HEIGHT = 900;
     constexpr const static int DEPTH = 5000;
+
+    struct VOXEL {
+        float value;
+        glm::vec3 normal;
+    };
 
     constexpr const static int EDGETABLE[256] = {
         0x0, 0x109, 0x203, 0x30a, 0x406, 0x50f, 0x605, 0x70c,

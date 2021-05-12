@@ -1,5 +1,7 @@
 #include "IsoSurface.h"
 
+#include "constant.h"
+
 using namespace std;
 
 IsoSurface::IsoSurface()
@@ -25,13 +27,13 @@ pair<glm::vec3, glm::vec3> IsoSurface::interpolation(glm::ivec3 p1, glm::ivec3 p
 {
     glm::vec3 voxel_size = this->m_volume.voxel_size();
 
-    pair<float, glm::vec3> voxel_1 = this->m_volume(p1);
-    pair<float, glm::vec3> voxel_2 = this->m_volume(p2);
+    CONSTANT::VOXEL voxel_1 = this->m_volume(p1);
+    CONSTANT::VOXEL voxel_2 = this->m_volume(p2);
 
-    float v1 = voxel_1.first;
-    float v2 = voxel_2.first;
-    glm::vec3 n1 = voxel_1.second;
-    glm::vec3 n2 = voxel_2.second;
+    float v1 = voxel_1.value;
+    float v2 = voxel_2.value;
+    glm::vec3 n1 = voxel_1.normal;
+    glm::vec3 n2 = voxel_2.normal;
 
     if (glm::length(n1) >= numeric_limits<float>::epsilon()) n1 = glm::normalize(n1);
     if (glm::length(n2) >= numeric_limits<float>::epsilon()) n2 = glm::normalize(n2);
@@ -62,14 +64,14 @@ void IsoSurface::run()
                 for (auto k = 0; k < this->m_volume.shape().z - 1; k++) {
                     int index = 0;
 
-                    if (this->m_volume(i, j, k).first < this->m_iso_value) index |= 1;
-                    if (this->m_volume(i, j, k + 1).first < this->m_iso_value) index |= 2;
-                    if (this->m_volume(i, j + 1, k + 1).first < this->m_iso_value) index |= 4;
-                    if (this->m_volume(i, j + 1, k).first < this->m_iso_value) index |= 8;
-                    if (this->m_volume(i + 1, j, k).first < this->m_iso_value) index |= 16;
-                    if (this->m_volume(i + 1, j, k + 1).first < this->m_iso_value) index |= 32;
-                    if (this->m_volume(i + 1, j + 1, k + 1).first < this->m_iso_value) index |= 64;
-                    if (this->m_volume(i + 1, j + 1, k).first < this->m_iso_value) index |= 128;
+                    if (this->m_volume(i, j, k).value < this->m_iso_value) index |= 1;
+                    if (this->m_volume(i, j, k + 1).value < this->m_iso_value) index |= 2;
+                    if (this->m_volume(i, j + 1, k + 1).value < this->m_iso_value) index |= 4;
+                    if (this->m_volume(i, j + 1, k).value < this->m_iso_value) index |= 8;
+                    if (this->m_volume(i + 1, j, k).value < this->m_iso_value) index |= 16;
+                    if (this->m_volume(i + 1, j, k + 1).value < this->m_iso_value) index |= 32;
+                    if (this->m_volume(i + 1, j + 1, k + 1).value < this->m_iso_value) index |= 64;
+                    if (this->m_volume(i + 1, j + 1, k).value < this->m_iso_value) index |= 128;
 
                     if (CONSTANT::EDGETABLE[index] == 0) continue;
                     if (CONSTANT::EDGETABLE[index] & 1) v[0] = this->interpolation(glm::ivec3(i, j, k), glm::ivec3(i, j, k + 1));

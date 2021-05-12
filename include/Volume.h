@@ -21,7 +21,7 @@ private:
     CONSTANT::ENDIAN m_endian, m_machine_endian;
     glm::ivec3 m_shape;
     glm::vec3 m_voxel_size;
-    std::vector<std::pair<float, glm::vec3>> m_data;
+    std::vector<CONSTANT::VOXEL> m_data;
 
     template<typename T>
     T endian(int index, char* data)
@@ -56,10 +56,10 @@ public:
     float const min_value() const;
     float const max_value() const;
 
-    std::pair<float, glm::vec3> const& operator()(int x, int y, int z) const;
-    std::pair<float, glm::vec3>& operator()(int x, int y, int z);
-    std::pair<float, glm::vec3> const& operator()(glm::ivec3 index) const;
-    std::pair<float, glm::vec3>& operator()(glm::ivec3 index);
+    CONSTANT::VOXEL const& operator()(int x, int y, int z) const;
+    CONSTANT::VOXEL& operator()(int x, int y, int z);
+    CONSTANT::VOXEL const& operator()(glm::ivec3 index) const;
+    CONSTANT::VOXEL& operator()(glm::ivec3 index);
 
     friend std::ostream& operator<<(std::ostream& os, const Volume& volume)
     {

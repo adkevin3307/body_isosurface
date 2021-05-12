@@ -225,7 +225,7 @@ void Volume::load_raw_file()
                     break;
             }
 
-            this->m_data[i].first = value;
+            this->m_data[i].value = value;
 
             local_min = min(local_min, value);
             local_max = max(local_max, value);
@@ -257,9 +257,9 @@ void Volume::gradient()
                 int y2 = max(0, j - 1);
                 int z2 = max(0, k - 1);
 
-                this->m_data[index].second.x = (this->operator()(x1, j, k).first - this->operator()(x2, j, k).first) / ((x1 - x2) * this->m_voxel_size.x);
-                this->m_data[index].second.y = (this->operator()(i, y1, k).first - this->operator()(i, y2, k).first) / ((y1 - y2) * this->m_voxel_size.y);
-                this->m_data[index].second.z = (this->operator()(i, j, z1).first - this->operator()(i, j, z2).first) / ((z1 - z2) * this->m_voxel_size.z);
+                this->m_data[index].normal.x = (this->operator()(x1, j, k).value - this->operator()(x2, j, k).value) / ((x1 - x2) * this->m_voxel_size.x);
+                this->m_data[index].normal.y = (this->operator()(i, y1, k).value - this->operator()(i, y2, k).value) / ((y1 - y2) * this->m_voxel_size.y);
+                this->m_data[index].normal.z = (this->operator()(i, j, z1).value - this->operator()(i, j, z2).value) / ((z1 - z2) * this->m_voxel_size.z);
             }
         }
     }
@@ -290,7 +290,7 @@ float const Volume::max_value() const
     return this->m_max;
 }
 
-pair<float, glm::vec3> const& Volume::operator()(int x, int y, int z) const
+CONSTANT::VOXEL const& Volume::operator()(int x, int y, int z) const
 {
     size_t index = x * this->m_shape.y * this->m_shape.z + y * this->m_shape.z + z;
 
@@ -301,7 +301,7 @@ pair<float, glm::vec3> const& Volume::operator()(int x, int y, int z) const
     return this->m_data[index];
 }
 
-pair<float, glm::vec3>& Volume::operator()(int x, int y, int z)
+CONSTANT::VOXEL& Volume::operator()(int x, int y, int z)
 {
     size_t index = x * this->m_shape.y * this->m_shape.z + y * this->m_shape.z + z;
 
@@ -312,12 +312,12 @@ pair<float, glm::vec3>& Volume::operator()(int x, int y, int z)
     return this->m_data[index];
 }
 
-pair<float, glm::vec3> const& Volume::operator()(glm::ivec3 index) const
+CONSTANT::VOXEL const& Volume::operator()(glm::ivec3 index) const
 {
     return this->operator()(index.x, index.y, index.z);
 }
 
-pair<float, glm::vec3>& Volume::operator()(glm::ivec3 index)
+CONSTANT::VOXEL& Volume::operator()(glm::ivec3 index)
 {
     return this->operator()(index.x, index.y, index.z);
 }

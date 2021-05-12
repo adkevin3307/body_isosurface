@@ -14,7 +14,13 @@
 namespace UTILS {
     inline void load(std::string filename)
     {
-        if (MeshManagement::exist(filename)) return;
+        if (MeshManagement::exist(filename)) {
+            std::cout << "==================================================" << '\n';
+            std::cout << "already exist" << '\n';
+            std::cout << "==================================================" << '\n';
+
+            return;
+        }
 
         Timer::begin();
         Volume volume("Data" / std::filesystem::path(filename + ".inf"), "Data" / std::filesystem::path(filename + ".raw"));
@@ -34,9 +40,7 @@ namespace UTILS {
             load(filename);
         }
 
-        Volume volume = MeshManagement::get(filename);
-
-        IsoSurface iso_surface(volume);
+        IsoSurface iso_surface(MeshManagement::get(filename));
         iso_surface.iso_value() = iso_value;
 
         Timer::begin();
@@ -55,7 +59,8 @@ namespace UTILS {
         assert(vertices.size() == normals.size());
 
         std::vector<GLfloat> data;
-        for (size_t i = 0; i < vertices.size(); i += 3) {
+        data.reserve(vertices.size() + normals.size());
+        for (size_t i = 0; i < vertices.size() && i < normals.size(); i += 3) {
             data.push_back(vertices[i]);
             data.push_back(vertices[i + 1]);
             data.push_back(vertices[i + 2]);
