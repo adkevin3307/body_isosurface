@@ -290,7 +290,7 @@ float const Volume::max_value() const
     return this->m_max;
 }
 
-CONSTANT::VOXEL const& Volume::operator()(int x, int y, int z) const
+VOXEL const& Volume::operator()(int x, int y, int z) const
 {
     size_t index = x * this->m_shape.y * this->m_shape.z + y * this->m_shape.z + z;
 
@@ -301,7 +301,7 @@ CONSTANT::VOXEL const& Volume::operator()(int x, int y, int z) const
     return this->m_data[index];
 }
 
-CONSTANT::VOXEL& Volume::operator()(int x, int y, int z)
+VOXEL& Volume::operator()(int x, int y, int z)
 {
     size_t index = x * this->m_shape.y * this->m_shape.z + y * this->m_shape.z + z;
 
@@ -312,12 +312,12 @@ CONSTANT::VOXEL& Volume::operator()(int x, int y, int z)
     return this->m_data[index];
 }
 
-CONSTANT::VOXEL const& Volume::operator()(glm::ivec3 index) const
+VOXEL const& Volume::operator()(glm::ivec3 index) const
 {
     return this->operator()(index.x, index.y, index.z);
 }
 
-CONSTANT::VOXEL& Volume::operator()(glm::ivec3 index)
+VOXEL& Volume::operator()(glm::ivec3 index)
 {
     return this->operator()(index.x, index.y, index.z);
 }

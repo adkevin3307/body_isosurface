@@ -12,6 +12,11 @@
 
 #include "constant.h"
 
+struct VOXEL {
+    float value;
+    glm::vec3 normal;
+};
+
 class Volume {
 private:
     int m_byte_size;
@@ -21,7 +26,7 @@ private:
     CONSTANT::ENDIAN m_endian, m_machine_endian;
     glm::ivec3 m_shape;
     glm::vec3 m_voxel_size;
-    std::vector<CONSTANT::VOXEL> m_data;
+    std::vector<VOXEL> m_data;
 
     template<typename T>
     T endian(int index, char* data)
@@ -56,10 +61,10 @@ public:
     float const min_value() const;
     float const max_value() const;
 
-    CONSTANT::VOXEL const& operator()(int x, int y, int z) const;
-    CONSTANT::VOXEL& operator()(int x, int y, int z);
-    CONSTANT::VOXEL const& operator()(glm::ivec3 index) const;
-    CONSTANT::VOXEL& operator()(glm::ivec3 index);
+    VOXEL const& operator()(int x, int y, int z) const;
+    VOXEL& operator()(int x, int y, int z);
+    VOXEL const& operator()(glm::ivec3 index) const;
+    VOXEL& operator()(glm::ivec3 index);
 
     friend std::ostream& operator<<(std::ostream& os, const Volume& volume)
     {

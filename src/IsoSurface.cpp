@@ -1,7 +1,5 @@
 #include "IsoSurface.h"
 
-#include "constant.h"
-
 using namespace std;
 
 IsoSurface::IsoSurface()
@@ -27,8 +25,8 @@ pair<glm::vec3, glm::vec3> IsoSurface::interpolation(glm::ivec3 p1, glm::ivec3 p
 {
     glm::vec3 voxel_size = this->m_volume.voxel_size();
 
-    CONSTANT::VOXEL voxel_1 = this->m_volume(p1);
-    CONSTANT::VOXEL voxel_2 = this->m_volume(p2);
+    VOXEL voxel_1 = this->m_volume(p1);
+    VOXEL voxel_2 = this->m_volume(p2);
 
     float v1 = voxel_1.value;
     float v2 = voxel_2.value;
