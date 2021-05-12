@@ -58,7 +58,7 @@ void IsoSurface::run()
         pair<glm::vec3, glm::vec3> v[12];
         vector<pair<glm::vec3, glm::vec3>> local_v;
 
-        #pragma omp for
+        #pragma omp for collapse(3)
         for (auto i = 0; i < this->m_volume.shape().x - 1; i++) {
             for (auto j = 0; j < this->m_volume.shape().y - 1; j++) {
                 for (auto k = 0; k < this->m_volume.shape().z - 1; k++) {
