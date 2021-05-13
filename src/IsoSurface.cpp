@@ -2,6 +2,29 @@
 
 using namespace std;
 
+pair<glm::vec3, glm::vec3> interpolation(pair<VOXEL, VOXEL> voxel, pair<glm::ivec3, glm::ivec3> index, glm::vec3 voxel_size, float value)
+{
+    float v1 = voxel.first.value;
+    float v2 = voxel.second.value;
+    glm::vec3 n1 = voxel.first.normal;
+    glm::vec3 n2 = voxel.second.normal;
+
+    if (glm::length(n1) >= numeric_limits<float>::epsilon()) n1 = glm::normalize(n1);
+    if (glm::length(n2) >= numeric_limits<float>::epsilon()) n2 = glm::normalize(n2);
+
+    if (fabs(value - v1) < numeric_limits<float>::epsilon()) return make_pair(glm::vec3(index.first) * voxel_size, n1);
+    if (fabs(value - v2) < numeric_limits<float>::epsilon()) return make_pair(glm::vec3(index.second) * voxel_size, n2);
+    if (fabs(v1 - v2) < numeric_limits<float>::epsilon()) return make_pair(glm::vec3(index.first) * voxel_size, n1);
+
+    float mu = (value - v1) / (v2 - v1);
+    glm::vec3 coordinate = glm::vec3(index.first) + mu * (glm::vec3(index.second) - glm::vec3(index.first));
+    glm::vec3 normal = n1 + mu * (n2 - n1);
+
+    if (glm::length(normal) >= numeric_limits<float>::epsilon()) normal = glm::normalize(normal);
+
+    return make_pair(coordinate * voxel_size, normal);
+}
+
 IsoSurface::IsoSurface()
     : m_iso_value(0.0)
 {
@@ -21,36 +44,23 @@ IsoSurface::~IsoSurface()
     this->m_normals.shrink_to_fit();
 }
 
-pair<glm::vec3, glm::vec3> IsoSurface::interpolation(glm::ivec3 p1, glm::ivec3 p2)
-{
-    glm::vec3 voxel_size = this->m_volume.voxel_size();
-
-    VOXEL voxel_1 = this->m_volume(p1);
-    VOXEL voxel_2 = this->m_volume(p2);
-
-    float v1 = voxel_1.value;
-    float v2 = voxel_2.value;
-    glm::vec3 n1 = voxel_1.normal;
-    glm::vec3 n2 = voxel_2.normal;
-
-    if (glm::length(n1) >= numeric_limits<float>::epsilon()) n1 = glm::normalize(n1);
-    if (glm::length(n2) >= numeric_limits<float>::epsilon()) n2 = glm::normalize(n2);
-
-    if (fabs(this->m_iso_value - v1) < numeric_limits<float>::epsilon()) return make_pair(glm::vec3(p1) * voxel_size, n1);
-    if (fabs(this->m_iso_value - v2) < numeric_limits<float>::epsilon()) return make_pair(glm::vec3(p2) * voxel_size, n2);
-    if (fabs(v1 - v2) < numeric_limits<float>::epsilon()) return make_pair(glm::vec3(p1) * voxel_size, n1);
-
-    float mu = (this->m_iso_value - v1) / (v2 - v1);
-    glm::vec3 coordinate = glm::vec3(p1) + mu * (glm::vec3(p2) - glm::vec3(p1));
-    glm::vec3 normal = n1 + mu * (n2 - n1);
-
-    if (glm::length(normal) >= numeric_limits<float>::epsilon()) normal = glm::normalize(normal);
-
-    return make_pair(coordinate * voxel_size, normal);
-}
-
 void IsoSurface::run()
 {
+    constexpr const int base[][6] = {
+        { 0, 0, 0, 0, 0, 1 },
+        { 0, 0, 1, 0, 1, 1 },
+        { 0, 1, 1, 0, 1, 0 },
+        { 0, 0, 0, 0, 1, 0 },
+        { 1, 0, 0, 1, 0, 1 },
+        { 1, 0, 1, 1, 1, 1 },
+        { 1, 1, 1, 1, 1, 0 },
+        { 1, 0, 0, 1, 1, 0 },
+        { 0, 0, 0, 1, 0, 0 },
+        { 0, 0, 1, 1, 0, 1 },
+        { 0, 1, 1, 1, 1, 1 },
+        { 0, 1, 0, 1, 1, 0 },
+    };
+
     #pragma omp parallel
     {
         pair<glm::vec3, glm::vec3> v[12];
@@ -72,18 +82,17 @@ void IsoSurface::run()
                     if (this->m_volume(i + 1, j + 1, k).value < this->m_iso_value) index |= 128;
 
                     if (CONSTANT::EDGETABLE[index] == 0) continue;
-                    if (CONSTANT::EDGETABLE[index] & 1) v[0] = this->interpolation(glm::ivec3(i, j, k), glm::ivec3(i, j, k + 1));
-                    if (CONSTANT::EDGETABLE[index] & 2) v[1] = this->interpolation(glm::ivec3(i, j, k + 1), glm::ivec3(i, j + 1, k + 1));
-                    if (CONSTANT::EDGETABLE[index] & 4) v[2] = this->interpolation(glm::ivec3(i, j + 1, k + 1), glm::ivec3(i, j + 1, k));
-                    if (CONSTANT::EDGETABLE[index] & 8) v[3] = this->interpolation(glm::ivec3(i, j, k), glm::ivec3(i, j + 1, k));
-                    if (CONSTANT::EDGETABLE[index] & 16) v[4] = this->interpolation(glm::ivec3(i + 1, j, k), glm::ivec3(i + 1, j, k + 1));
-                    if (CONSTANT::EDGETABLE[index] & 32) v[5] = this->interpolation(glm::ivec3(i + 1, j, k + 1), glm::ivec3(i + 1, j + 1, k + 1));
-                    if (CONSTANT::EDGETABLE[index] & 64) v[6] = this->interpolation(glm::ivec3(i + 1, j + 1, k + 1), glm::ivec3(i + 1, j + 1, k));
-                    if (CONSTANT::EDGETABLE[index] & 128) v[7] = this->interpolation(glm::ivec3(i + 1, j, k), glm::ivec3(i + 1, j + 1, k));
-                    if (CONSTANT::EDGETABLE[index] & 256) v[8] = this->interpolation(glm::ivec3(i, j, k), glm::ivec3(i + 1, j, k));
-                    if (CONSTANT::EDGETABLE[index] & 512) v[9] = this->interpolation(glm::ivec3(i, j, k + 1), glm::ivec3(i + 1, j, k + 1));
-                    if (CONSTANT::EDGETABLE[index] & 1024) v[10] = this->interpolation(glm::ivec3(i, j + 1, k + 1), glm::ivec3(i + 1, j + 1, k + 1));
-                    if (CONSTANT::EDGETABLE[index] & 2048) v[11] = this->interpolation(glm::ivec3(i, j + 1, k), glm::ivec3(i + 1, j + 1, k));
+                    for (auto v_index = 0; v_index < 12; v_index++) {
+                        if (CONSTANT::EDGETABLE[index] & (1 << v_index)) {
+                            glm::ivec3 p1(i + base[v_index][0], j + base[v_index][1], k + base[v_index][2]);
+                            glm::ivec3 p2(i + base[v_index][3], j + base[v_index][4], k + base[v_index][5]);
+
+                            VOXEL v1 = this->m_volume(p1);
+                            VOXEL v2 = this->m_volume(p2);
+
+                            v[v_index] = interpolation(make_pair(v1, v2), make_pair(p1, p2), this->m_volume.voxel_size(), this->m_iso_value);
+                        }
+                    }
 
                     for (auto vertex = 0; CONSTANT::TRIANGLETABLE[index][vertex] != -1 && vertex < 16; vertex += 3) {
                         local_v.push_back(v[CONSTANT::TRIANGLETABLE[index][vertex + 0]]);

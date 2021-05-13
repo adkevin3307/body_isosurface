@@ -8,14 +8,14 @@
 
 #include "Volume.h"
 
+std::pair<glm::vec3, glm::vec3> interpolation(std::pair<VOXEL, VOXEL> voxel, std::pair<glm::ivec3, glm::ivec3> index, glm::vec3 voxel_size, float value);
+
 class IsoSurface {
 private:
     Volume m_volume;
     float m_iso_value;
     std::vector<float> m_vertices;
     std::vector<float> m_normals;
-
-    std::pair<glm::vec3, glm::vec3> interpolation(glm::ivec3 p1, glm::ivec3 p2);
 
 public:
     IsoSurface();
