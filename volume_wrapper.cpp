@@ -18,14 +18,14 @@ PYBIND11_MODULE(_volume, m)
         .def(pybind11::init<string, string>())
         .def("__getitem__", [](Volume& m, pybind11::tuple index) {
             if (index.size() != 3) {
-                throw std::runtime_error("Invalid state!");
+                throw std::runtime_error("Invalid argument size, need 3 dimension.");
             }
 
             return m(index[0].cast<int>(), index[1].cast<int>(), index[2].cast<int>());
         })
         .def("__setitem__", [](Volume& m, pybind11::tuple index, VOXEL voxel) {
             if (index.size() != 3) {
-                throw std::runtime_error("Invalid state!");
+                throw std::runtime_error("Invalid argument size, need 3 dimension.");
             }
 
             m(index[0].cast<int>(), index[1].cast<int>(), index[2].cast<int>()) = voxel;
