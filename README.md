@@ -23,13 +23,18 @@ calculate an isosurface with C++, and maybe provide 3D rendering methods for out
 
 ### Target
 
-- Well-Defined Structure
-- CI Procedure
-- Computation Speed
-- 3D Rendering (maybe)
-    - Camera
-    - Shadow
-    - Controllable
+- [x] Well-Defined Structure
+- [x] Python API
+- [ ] CI Procedure
+    - [x] Unit test w/ `google test`
+- [x] Computation Speed
+    - [x] Profile w/ `perf`
+    - [x] Speed up by `OpenMP`
+- [x] 3D Rendering
+    - [x] Render w/ `OpenGL`
+    - [x] Camera
+    - [x] Shadow
+    - [x] Controllable
 
 ## Perspective users
 
@@ -47,7 +52,20 @@ if the user does not define it. When the procedures mentioned above are done, th
 calculate and separate the isosurface with multiple triangles that follows Marching Cubes method. Then the 
 user can get and use triangles and normals for the data.
 
-## API description
+## API
+
+### Environment
+
+- `g++ w/ std >= 17` for `C++` user
+    - `cmake` w/ appropriate version
+    - `openmp` w/ appropriate version
+- `pybind11` w/ appropriate version
+- `python3.6.x` or greater for `Python` user
+
+### Detail Description
+
+If you are `C++` user, just take reference below.
+If you are `Python` user, most of the `Python` type APIs are provided w/ the same name.
 
 - Volume class
 ```
@@ -63,7 +81,8 @@ Volume
 operator()
     getter and setter for voxel value and normal
     - parameters:
-        i, j, k (size_t): index for voxel
+        i (int), j (int), k (int): index for voxel, overloadding
+        index (glm::ivec3): index for voxel, overloadding
     - return:
         (float, (float, float, float)): return voxel value and normal
 
@@ -71,36 +90,61 @@ shape
     get volume shape
     - return:
         (size_t, size_t, size_t): return volume shape
+
+voxel_size
+    get voxel size
+    - return:
+        (float, float, float): return voxel size
+
+average
+    get average intensity value
+    - return:
+        (float): return average intensity value
+
+min_value
+    get minimum intensity value
+    - return:
+        (float): return minimum intensity value
+
+max_value
+    get maximum intensity value
+    - return:
+        (float): return maximum intensity value
 ```
 - IsoSurface class
 ```
 IsoSurface
-    the constructor use inf_file and raw_file to initialize Volume
+    the constructor use Volume class
     - parameters:
-        inf_file (string): inf file path
-        raw_file (string): raw file path
-        iso_value (float): iso value (optional)
+        volume (Volume): volume that want to calculate
 
 ~IsoSurface
     destructor
 
 iso_value:
     getter and setter for iso_value
+    - parameters:
+        iso_value (float): iso_value for setter
     - return:
-        (float): iso_value
+        (float): get iso_value for getter
 
 run:
     calculate iso surface triangles' vertices with Marching Cubes
 
-vertex:
+shape:
+    get shape of volume, consider about voxel size
+    - return:
+        (glm::vec3): shape of volume
+
+vertices:
     get triangles' vertices let can be shown on 3D space
     - return:
         (vector<float>): return vertices
 
-normal:
+normals:
     get vertices' normals which can be used on lighting model
     - return:
-        (vector<(float, float, float)>): return normals
+        (vector<float>): return normals
 ```
 
 ## Engineering infrastructure
@@ -110,15 +154,16 @@ Use `clang-format` to make sure coding style the same and easy to read.
 
 ## Schedule
 
-- Survey Marching Cubes method (04/11 ~ 04/17)
-- Implement `Volume` for reading data (04/14 ~ 04/20)
-- Unit test for `Volume` class (04/18 ~ 04/20)
-- Implement Marching Cubes in `IsoSurface` class (04/21 ~ 04/27)
-- Unit test for `IsoSurface` class (04/25 ~ 04/27)
-- Combine each class and test (04/28 ~ 05/04)
-- Optimize calculate cost (05/05 ~ 05/11)
-- 3D rendering (05/12 ~ )
+- [x] Survey Marching Cubes method (04/11 ~ 04/17)
+- [x] Implement `Volume` for reading data (04/14 ~ 04/20)
+- [x] Unit test for `Volume` class (04/18 ~ 04/20)
+- [x] Implement Marching Cubes in `IsoSurface` class (04/21 ~ 04/27)
+- [x] Unit test for `IsoSurface` class (04/25 ~ 04/27)
+- [x] Combine each class and test (04/28 ~ 05/04)
+- [x] Optimize calculate cost (05/05 ~ 05/11)
+- [x] 3D rendering (05/12 ~ )
 
 ## References
 
 - https://en.wikipedia.org/wiki/Marching_cubes
+
