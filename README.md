@@ -66,6 +66,7 @@ user can get and use triangles and normals for the data.
 
 If you are `C++` user, just take reference below.
 If you are `Python` user, most of the `Python` type APIs are provided w/ the same name.
+Don't forget to import `_volume` and `_iso_surface` for `Python` APIs.
 
 - Volume class
 ```
@@ -130,11 +131,6 @@ iso_value:
 
 run:
     calculate iso surface triangles' vertices with Marching Cubes
-
-shape:
-    get shape of volume, consider about voxel size
-    - return:
-        (glm::vec3): shape of volume
 
 vertices:
     get triangles' vertices let can be shown on 3D space
