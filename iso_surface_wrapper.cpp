@@ -19,11 +19,14 @@ PYBIND11_MODULE(_iso_surface, m)
             return ss.str();
         })
         .def("run", &IsoSurface::run)
-        .def_property("iso_value", [](IsoSurface& iso_surface) {
-            return iso_surface.iso_value();
-        }, [](IsoSurface& iso_surface, float value) {
-            iso_surface.iso_value() = value;
-        })
+        .def_property("iso_value",
+            [](IsoSurface& iso_surface) {
+                return iso_surface.iso_value();
+            },
+            [](IsoSurface& iso_surface, float value) {
+                iso_surface.iso_value() = value;
+            }
+        )
         .def_property_readonly("vertices", &IsoSurface::vertices)
         .def_property_readonly("normals", &IsoSurface::normals);
 }

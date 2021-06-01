@@ -31,10 +31,6 @@ target_include_directories(main PUBLIC include include/imgui)
 target_link_libraries(main ${CMAKE_SOURCE_DIR}/lib/libglfw3.a GL X11 pthread Xrandr Xi dl GLEW)
 
 # pybind11
-pybind11_add_module(_glm ${CMAKE_SOURCE_DIR}/glm_wrapper.cpp)
-
-target_include_directories(_glm PUBLIC include extern/pybind11/include)
-
 pybind11_add_module(_volume ${CMAKE_SOURCE_DIR}/volume_wrapper.cpp ${CMAKE_SOURCE_DIR}/src/Volume.cpp)
 
 target_include_directories(_volume PUBLIC include extern/pybind11/include)
