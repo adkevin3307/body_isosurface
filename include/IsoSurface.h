@@ -29,7 +29,6 @@ public:
 
     void run();
 
-    glm::vec3 const shape() const;
     std::vector<float> const& vertices() const;
     std::vector<float> const& normals() const;
 
@@ -39,7 +38,6 @@ public:
     friend std::ostream& operator<<(std::ostream& os, const IsoSurface& iso_surface)
     {
         os << "iso value: " << iso_surface.m_iso_value << '\n';
-        os << "shape: " << glm::to_string(iso_surface.shape()) << '\n';
         os << "vertices: " << iso_surface.m_vertices.size() << '\n';
         os << "normals: " << iso_surface.m_normals.size();
 

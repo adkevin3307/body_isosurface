@@ -134,11 +134,6 @@ void IsoSurface::run()
     }
 }
 
-glm::vec3 const IsoSurface::shape() const
-{
-    return (glm::vec3(this->m_volume.shape()) * this->m_volume.voxel_size());
-}
-
 vector<float> const& IsoSurface::vertices() const
 {
     return this->m_vertices;

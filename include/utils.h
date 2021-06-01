@@ -52,7 +52,7 @@ namespace UTILS {
         std::cout << "time: " << Timer::time() << '\n';
         std::cout << "==================================================" << '\n';
 
-        glm::vec3 shape = iso_surface.shape();
+        glm::vec3 shape = MeshManagement::get(filename).shape();
         std::vector<float> vertices = iso_surface.vertices();
         std::vector<float> normals = iso_surface.normals();
 

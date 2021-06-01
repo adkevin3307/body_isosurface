@@ -24,7 +24,6 @@ PYBIND11_MODULE(_iso_surface, m)
         }, [](IsoSurface& iso_surface, float value) {
             iso_surface.iso_value() = value;
         })
-        .def_property_readonly("shape", &IsoSurface::shape)
         .def_property_readonly("vertices", &IsoSurface::vertices)
         .def_property_readonly("normals", &IsoSurface::normals);
 }
