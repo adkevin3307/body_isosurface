@@ -61,74 +61,60 @@ void IsoSurface::run()
         { 0, 1, 0, 1, 1, 0 },
     };
 
-    #pragma omp parallel
-    {
-        pair<glm::vec3, glm::vec3> v[12];
-        vector<pair<glm::vec3, glm::vec3>> local_v;
+    pair<glm::vec3, glm::vec3> v[12];
 
-        #pragma omp for collapse(3)
-        for (auto i = 0; i < this->m_volume.shape().x - 1; i++) {
-            for (auto j = 0; j < this->m_volume.shape().y - 1; j++) {
-                for (auto k = 0; k < this->m_volume.shape().z - 1; k++) {
-                    int index = 0;
+    for (auto i = 0; i < this->m_volume.shape().x - 1; i++) {
+        for (auto j = 0; j < this->m_volume.shape().y - 1; j++) {
+            for (auto k = 0; k < this->m_volume.shape().z - 1; k++) {
+                int index = 0;
 
-                    if (this->m_volume(i, j, k).value < this->m_iso_value) index |= 1;
-                    if (this->m_volume(i, j, k + 1).value < this->m_iso_value) index |= 2;
-                    if (this->m_volume(i, j + 1, k + 1).value < this->m_iso_value) index |= 4;
-                    if (this->m_volume(i, j + 1, k).value < this->m_iso_value) index |= 8;
-                    if (this->m_volume(i + 1, j, k).value < this->m_iso_value) index |= 16;
-                    if (this->m_volume(i + 1, j, k + 1).value < this->m_iso_value) index |= 32;
-                    if (this->m_volume(i + 1, j + 1, k + 1).value < this->m_iso_value) index |= 64;
-                    if (this->m_volume(i + 1, j + 1, k).value < this->m_iso_value) index |= 128;
+                if (this->m_volume(i, j, k).value < this->m_iso_value) index |= 1;
+                if (this->m_volume(i, j, k + 1).value < this->m_iso_value) index |= 2;
+                if (this->m_volume(i, j + 1, k + 1).value < this->m_iso_value) index |= 4;
+                if (this->m_volume(i, j + 1, k).value < this->m_iso_value) index |= 8;
+                if (this->m_volume(i + 1, j, k).value < this->m_iso_value) index |= 16;
+                if (this->m_volume(i + 1, j, k + 1).value < this->m_iso_value) index |= 32;
+                if (this->m_volume(i + 1, j + 1, k + 1).value < this->m_iso_value) index |= 64;
+                if (this->m_volume(i + 1, j + 1, k).value < this->m_iso_value) index |= 128;
 
-                    if (CONSTANT::EDGETABLE[index] == 0) continue;
-                    for (auto v_index = 0; v_index < 12; v_index++) {
-                        if (CONSTANT::EDGETABLE[index] & (1 << v_index)) {
-                            glm::ivec3 p1(i + base[v_index][0], j + base[v_index][1], k + base[v_index][2]);
-                            glm::ivec3 p2(i + base[v_index][3], j + base[v_index][4], k + base[v_index][5]);
+                if (CONSTANT::EDGETABLE[index] == 0) continue;
+                for (auto v_index = 0; v_index < 12; v_index++) {
+                    if (CONSTANT::EDGETABLE[index] & (1 << v_index)) {
+                        glm::ivec3 p1(i + base[v_index][0], j + base[v_index][1], k + base[v_index][2]);
+                        glm::ivec3 p2(i + base[v_index][3], j + base[v_index][4], k + base[v_index][5]);
 
-                            VOXEL v1 = this->m_volume(p1);
-                            VOXEL v2 = this->m_volume(p2);
+                        VOXEL v1 = this->m_volume(p1);
+                        VOXEL v2 = this->m_volume(p2);
 
-                            v[v_index] = interpolation(make_pair(v1, v2), make_pair(p1, p2), this->m_volume.voxel_size(), this->m_iso_value);
-                        }
-                    }
-
-                    for (auto vertex = 0; CONSTANT::TRIANGLETABLE[index][vertex] != -1 && vertex < 16; vertex += 3) {
-                        local_v.push_back(v[CONSTANT::TRIANGLETABLE[index][vertex + 0]]);
-                        local_v.push_back(v[CONSTANT::TRIANGLETABLE[index][vertex + 1]]);
-                        local_v.push_back(v[CONSTANT::TRIANGLETABLE[index][vertex + 2]]);
+                        v[v_index] = interpolation(make_pair(v1, v2), make_pair(p1, p2), this->m_volume.voxel_size(), this->m_iso_value);
                     }
                 }
-            }
-        }
 
-        #pragma omp critical
-        {
-            for (size_t i = 0; i < local_v.size(); i += 3) {
-                this->m_vertices.push_back(local_v[i + 0].first.x);
-                this->m_vertices.push_back(local_v[i + 0].first.y);
-                this->m_vertices.push_back(local_v[i + 0].first.z);
+                for (auto vertex = 0; CONSTANT::TRIANGLETABLE[index][vertex] != -1 && vertex < 16; vertex += 3) {
+                    this->m_vertices.push_back(v[CONSTANT::TRIANGLETABLE[index][vertex + 0]].first.x);
+                    this->m_vertices.push_back(v[CONSTANT::TRIANGLETABLE[index][vertex + 0]].first.y);
+                    this->m_vertices.push_back(v[CONSTANT::TRIANGLETABLE[index][vertex + 0]].first.z);
 
-                this->m_vertices.push_back(local_v[i + 1].first.x);
-                this->m_vertices.push_back(local_v[i + 1].first.y);
-                this->m_vertices.push_back(local_v[i + 1].first.z);
+                    this->m_vertices.push_back(v[CONSTANT::TRIANGLETABLE[index][vertex + 1]].first.x);
+                    this->m_vertices.push_back(v[CONSTANT::TRIANGLETABLE[index][vertex + 1]].first.y);
+                    this->m_vertices.push_back(v[CONSTANT::TRIANGLETABLE[index][vertex + 1]].first.z);
 
-                this->m_vertices.push_back(local_v[i + 2].first.x);
-                this->m_vertices.push_back(local_v[i + 2].first.y);
-                this->m_vertices.push_back(local_v[i + 2].first.z);
+                    this->m_vertices.push_back(v[CONSTANT::TRIANGLETABLE[index][vertex + 2]].first.x);
+                    this->m_vertices.push_back(v[CONSTANT::TRIANGLETABLE[index][vertex + 2]].first.y);
+                    this->m_vertices.push_back(v[CONSTANT::TRIANGLETABLE[index][vertex + 2]].first.z);
 
-                this->m_normals.push_back(local_v[i + 0].second.x);
-                this->m_normals.push_back(local_v[i + 0].second.y);
-                this->m_normals.push_back(local_v[i + 0].second.z);
+                    this->m_normals.push_back(v[CONSTANT::TRIANGLETABLE[index][vertex + 0]].second.x);
+                    this->m_normals.push_back(v[CONSTANT::TRIANGLETABLE[index][vertex + 0]].second.y);
+                    this->m_normals.push_back(v[CONSTANT::TRIANGLETABLE[index][vertex + 0]].second.z);
 
-                this->m_normals.push_back(local_v[i + 1].second.x);
-                this->m_normals.push_back(local_v[i + 1].second.y);
-                this->m_normals.push_back(local_v[i + 1].second.z);
+                    this->m_normals.push_back(v[CONSTANT::TRIANGLETABLE[index][vertex + 1]].second.x);
+                    this->m_normals.push_back(v[CONSTANT::TRIANGLETABLE[index][vertex + 1]].second.y);
+                    this->m_normals.push_back(v[CONSTANT::TRIANGLETABLE[index][vertex + 1]].second.z);
 
-                this->m_normals.push_back(local_v[i + 2].second.x);
-                this->m_normals.push_back(local_v[i + 2].second.y);
-                this->m_normals.push_back(local_v[i + 2].second.z);
+                    this->m_normals.push_back(v[CONSTANT::TRIANGLETABLE[index][vertex + 2]].second.x);
+                    this->m_normals.push_back(v[CONSTANT::TRIANGLETABLE[index][vertex + 2]].second.y);
+                    this->m_normals.push_back(v[CONSTANT::TRIANGLETABLE[index][vertex + 2]].second.z);
+                }
             }
         }
     }

@@ -3,7 +3,7 @@ cmake_minimum_required(VERSION 3.14)
 project(body_isosurface)
 
 set(CMAKE_CXX_STANDARD 17)
-set(CMAKE_CXX_FLAGS "-Wall -O3 -fopenmp")
+set(CMAKE_CXX_FLAGS "-Wall -O3")
 
 include(FetchContent)
 set(FETCHCONTENT_QUIET FALSE)

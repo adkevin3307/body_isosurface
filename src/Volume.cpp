@@ -182,60 +182,47 @@ void Volume::load_raw_file()
     this->m_min = numeric_limits<float>::max();
     this->m_max = numeric_limits<float>::min();
 
-    #pragma omp parallel
-    {
-        float local_min = numeric_limits<float>::max();
-        float local_max = numeric_limits<float>::min();
+    for (size_t i = 0; i < this->m_data.size(); i++) {
+        int byte_index = i * this->m_byte_size;
 
-        #pragma omp for
-        for (size_t i = 0; i < this->m_data.size(); i++) {
-            int byte_index = i * this->m_byte_size;
+        float value = 0.0;
+        switch (this->m_type) {
+            case CONSTANT::TYPE::FLOAT:
+                value = this->endian<float>(byte_index, byte_data);
 
-            float value = 0.0;
-            switch (this->m_type) {
-                case CONSTANT::TYPE::FLOAT:
-                    value = this->endian<float>(byte_index, byte_data);
+                break;
+            case CONSTANT::TYPE::UNSIGNED_CHAR:
+                value = (float)this->endian<unsigned char>(byte_index, byte_data);
 
-                    break;
-                case CONSTANT::TYPE::UNSIGNED_CHAR:
-                    value = (float)this->endian<unsigned char>(byte_index, byte_data);
+                break;
+            case CONSTANT::TYPE::CHAR:
+                value = (float)this->endian<char>(byte_index, byte_data);
 
-                    break;
-                case CONSTANT::TYPE::CHAR:
-                    value = (float)this->endian<char>(byte_index, byte_data);
+                break;
+            case CONSTANT::TYPE::UNSIGNED_SHORT:
+                value = (float)this->endian<unsigned short>(byte_index, byte_data);
 
-                    break;
-                case CONSTANT::TYPE::UNSIGNED_SHORT:
-                    value = (float)this->endian<unsigned short>(byte_index, byte_data);
+                break;
+            case CONSTANT::TYPE::SHORT:
+                value = (float)this->endian<short>(byte_index, byte_data);
 
-                    break;
-                case CONSTANT::TYPE::SHORT:
-                    value = (float)this->endian<short>(byte_index, byte_data);
+                break;
+            case CONSTANT::TYPE::UNSIGNED_INT:
+                value = (float)this->endian<unsigned int>(byte_index, byte_data);
 
-                    break;
-                case CONSTANT::TYPE::UNSIGNED_INT:
-                    value = (float)this->endian<unsigned int>(byte_index, byte_data);
+                break;
+            case CONSTANT::TYPE::INT:
+                value = (float)this->endian<int>(byte_index, byte_data);
 
-                    break;
-                case CONSTANT::TYPE::INT:
-                    value = (float)this->endian<int>(byte_index, byte_data);
-
-                    break;
-                default:
-                    break;
-            }
-
-            this->m_data[i].value = value;
-
-            local_min = min(local_min, value);
-            local_max = max(local_max, value);
+                break;
+            default:
+                break;
         }
 
-        #pragma omp critical
-        {
-            this->m_min = min(this->m_min, local_min);
-            this->m_max = max(this->m_max, local_max);
-        }
+        this->m_data[i].value = value;
+
+        this->m_min = min(this->m_min, value);
+        this->m_max = max(this->m_max, value);
     }
 
     delete[] byte_data;
@@ -243,7 +230,6 @@ void Volume::load_raw_file()
 
 void Volume::gradient()
 {
-    #pragma omp parallel for collapse(3)
     for (auto i = 0; i < this->m_shape.x; i++) {
         for (auto j = 0; j < this->m_shape.y; j++) {
             for (auto k = 0; k < this->m_shape.z; k++) {
