@@ -53,6 +53,10 @@ namespace UTILS {
         std::cout << "==================================================" << '\n';
 
         glm::vec3 shape = MeshManagement::get(filename).shape();
+        glm::vec3 voxel_size = MeshManagement::get(filename).voxel_size();
+
+        shape = shape * voxel_size;
+
         std::vector<float> vertices = iso_surface.vertices();
         std::vector<float> normals = iso_surface.normals();
 
